@@ -30,5 +30,3 @@ git clone https://github.com/osmancoskun/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 stow .
 ```
-
-I simplified the README to include just the package installation commands for different distributions and a basic installation process using the repository you mentioned. Is this more in line with what you were looking for?
