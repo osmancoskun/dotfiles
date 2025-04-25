@@ -1,148 +1,200 @@
-" Vim Config 18.01.2023
+" Modern Vim Configuration for Web & Linux Development
+" ====================================================
 
-" Disable arrow keys
-noremap <Up> <Nop>
-noremap <Down> <Nop>
-noremap <Left> <Nop>
-noremap <Right> <Nop>
+" Basic Settings
+" -------------
+set nocompatible
+set encoding=UTF-8
+syntax enable
+set number                     " Show line numbers
+set relativenumber             " Show relative line numbers
+set cursorline                 " Highlight current line
+set showmatch                  " Highlight matching brackets
+set hlsearch                   " Highlight search results
+set incsearch                  " Incremental search
+set ignorecase                 " Case insensitive search
+set smartcase                  " Override ignorecase if search pattern has uppercase
+set expandtab                  " Use spaces instead of tabs
+set tabstop=2                  " 2 spaces for a tab
+set shiftwidth=2               " 2 spaces for indentation
+set autoindent                 " Auto indent
+set smartindent                " Smart indent
+set wrap                       " Wrap lines
+set linebreak                  " Break lines at words
+set scrolloff=8                " Keep cursor 8 lines away from screen border
+set sidescrolloff=8            " Keep cursor 8 columns away from screen border
+set clipboard=unnamedplus      " Use system clipboard
+set mouse=a                    " Enable mouse
+set hidden                     " Allow hidden buffers
+set nobackup                   " No backup files
+set nowritebackup              " No backup files while editing
+set noswapfile                 " No swap files
+set undofile                   " Persistent undo
+set undodir=~/.vim/undodir     " Undo directory
+set updatetime=300             " Faster completion
+set timeoutlen=500             " Timeout for key mappings
+set shortmess+=c               " Don't pass messages to ins-completion-menu
+set signcolumn=yes             " Always show sign column
+set splitright                 " Split windows right
+set splitbelow                 " Split windows below
 
-" Encoding
-set encoding=utf-8
-set fileencoding=utf-8
-set fileencodings=utf-8
-set ttyfast
-
-set hidden
-
-" Searching
-set hlsearch
-set incsearch
-set ignorecase
-set smartcase
-
-set fileformats=unix,dos,mac
-
-syntax on
-set ruler
-set number
-
-" Vim Plug Installation if not installed
-let vimplug_exists=expand('~/.vim/autoload/plug.vim')
-if has('win32')&&!has('win64')
-  let curl_exists=expand('C:\Windows\Sysnative\curl.exe')
-else
-  let curl_exists=expand('curl')
+" Enable 24-bit colors if supported
+if has('termguicolors')
+  set termguicolors
 endif
 
-if !filereadable(vimplug_exists)
-  if !executable(curl_exists)
-    echoerr "You have to install curl or first install vim-plug yourself!"
-    execute "q!"
-  endif
-  echo "Installing Vim-Plug..."
-  echo ""
-  silent exec "!"curl_exists" -fLo " . shellescape(vimplug_exists) . " --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-  let g:not_finish_vimplug = "yes"
-
-  autocmd VimEnter * PlugInstall
+" Create undodir if it doesn't exist
+if !isdirectory($HOME."/.vim/undodir")
+    call mkdir($HOME."/.vim/undodir", "p", 0700)
 endif
 
-" Required:
-call plug#begin(expand('~/.vim/plugged'))
+" Install vim-plug if not found
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+endif
+
+" Run PlugInstall if there are missing plugins
+autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+  \| PlugInstall --sync | source $MYVIMRC
+\| endif
 
 " Plugins
-Plug 'scrooloose/nerdtree' " File Explorer
-Plug 'leafOfTree/vim-svelte-plugin'
-Plug 'leafOfTree/vim-svelte-theme'
-Plug 'junegunn/fzf', { 'dir' : '~/.fzf' , 'do' : './install -all' }
-Plug 'junegunn/fzf.vim'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'ghifarit53/tokyonight-vim'
-Plug 'alvan/vim-closetag'
-Plug 'prettier/vim-prettier', { 'do': 'yarn install --frozen-lockfile --production' }
-Plug 'mattn/emmet-vim'
+" -------
+call plug#begin('~/.vim/plugged')
+  " Theme and UI
+  Plug 'morhetz/gruvbox'                          " Gruvbox theme
+  Plug 'vim-airline/vim-airline'                  " Status bar
+  Plug 'vim-airline/vim-airline-themes'           " Airline themes
+  Plug 'ryanoasis/vim-devicons'                   " Icons
+  
+  " File navigation
+  Plug 'junegunn/fzf', { 'do': { -> fzf#install() } } " FZF base
+  Plug 'junegunn/fzf.vim'                         " FZF integration
+  
+  " File browser
+  Plug 'preservim/nerdtree'                       " File explorer
+  
+  " Editing
+  Plug 'tpope/vim-surround'                       " Surround text objects
+  Plug 'tpope/vim-commentary'                     " Easy commenting
+  Plug 'jiangmiao/auto-pairs'                     " Auto close brackets
+  Plug 'mattn/emmet-vim'                          " HTML/CSS expansion
+  
+  " Auto-completion and LSP
+  Plug 'neoclide/coc.nvim', {'branch': 'release'} " Intellisense
+  
+  " Git
+  Plug 'tpope/vim-fugitive'                       " Git integration
+  Plug 'airblade/vim-gitgutter'                   " Git diff in sign column
+  
+  " Syntax highlighting and language support
+  Plug 'sheerun/vim-polyglot'                     " Language pack
+  Plug 'evanleck/vim-svelte'                      " Svelte support
+  Plug 'pangloss/vim-javascript'                  " JavaScript support
+  Plug 'HerringtonDarkholme/yats.vim'             " TypeScript syntax
+  Plug 'maxmellon/vim-jsx-pretty'                 " JSX/React
+  
+  " Code formatting
+  Plug 'prettier/vim-prettier', { 'do': 'npm install --frozen-lockfile --production' }
+  
+  " Spell checking and auto-correct
+  Plug 'kamykn/spelunker.vim'                     " Better spell checking
+  Plug 'sedm0784/vim-you-autocorrect'             " Auto-correction
 call plug#end()
-packloadall
-set termguicolors
-let g:tokyonight_style = 'night'
-let g:tokyonight_enable_italic = 1
-colorscheme tokyonight
 
+" Theme Configuration
+" ------------------
+set background=dark
+colorscheme gruvbox
+let g:airline_theme='gruvbox'
+let g:airline_powerline_fonts = 1
+
+" Font Settings (for GVim)
+" -----------------------------------
+if has('gui_running')
+  set guifont=JetBrainsMono\ Nerd\ Font:h12
+endif
+
+" Spell Check Configuration
+" ------------------------
+let g:spelunker_check_type = 2
+let g:spelunker_highlight_type = 2
+let g:enable_spelunker_vim = 1
+let g:enable_spelunker_vim_on_readonly = 1
+
+" AutoCorrect Setup (toggle with <leader>a)
+let g:autocorrect_enable = 0
+nnoremap <leader>a :AutoCorrectToggle<CR>
+
+" FZF Configuration (as an alternative to Telescope)
+" -------------------------------------------------
+" Create a preview window for FZF
+command! -bang -nargs=? -complete=dir Files
+    \ call fzf#vim#files(<q-args>, fzf#vim#with_preview(), <bang>0)
+
+" Customize FZF colors to match your colorscheme
+let g:fzf_colors =
+\ { 'fg':      ['fg', 'Normal'],
+  \ 'bg':      ['bg', 'Normal'],
+  \ 'hl':      ['fg', 'Comment'],
+  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+  \ 'hl+':     ['fg', 'Statement'],
+  \ 'info':    ['fg', 'PreProc'],
+  \ 'border':  ['fg', 'Ignore'],
+  \ 'prompt':  ['fg', 'Conditional'],
+  \ 'pointer': ['fg', 'Exception'],
+  \ 'marker':  ['fg', 'Keyword'],
+  \ 'spinner': ['fg', 'Label'],
+  \ 'header':  ['fg', 'Comment'] }
+
+" Layout options
+let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
+
+" NERDTree Configuration
+" ---------------------
+let NERDTreeShowHidden = 1
+let NERDTreeMinimalUI = 1
+let NERDTreeIgnore = ['\.pyc$', '\.git$', '__pycache__', 'node_modules', 'dist', 'build']
+
+" Emmet Configuration
+" ------------------
+let g:user_emmet_leader_key='<C-e>'
+let g:user_emmet_settings = {
+\  'javascript.jsx' : {
+\      'extends' : 'jsx',
+\  },
+\  'svelte' : {
+\      'extends' : 'html',
+\  },
+\}
+
+" CoC Configuration
+" ----------------
 let g:coc_global_extensions = [
-    \ 'coc-snippets',
-    \ 'coc-pairs',
-    \ 'coc-prettier',
-    \ 'coc-json',
-    \ 'coc-html',
-    \ ]
+  \ 'coc-tsserver',
+  \ 'coc-json',
+  \ 'coc-html',
+  \ 'coc-css',
+  \ 'coc-eslint',
+  \ 'coc-prettier',
+  \ 'coc-pyright',
+  \ 'coc-svelte',
+  \ 'coc-snippets',
+  \ 'coc-pairs',
+  \ 'coc-highlight',
+  \ 'coc-spell-checker'
+  \ ]
 
-
-" Shortcuts
-"" NERDTree
-nnoremap <C-b> :NERDTreeToggle<CR>
-
-"" Tabs
-nnoremap ]t :tabn <cr>
-nnoremap [t :tabp <cr>
-nnoremap <C-o> :Prettier<CR>
-function! PrettierFormat()
-    let l:filetype = &filetype
-    if l:filetype == 'css' || l:filetype == 'json' || l:filetype == 'javascript' || l:filetype == 'html' || l:filetype == 'markdown'
-        execute 'Prettier'
-    else
-        echo "Filetype not supported for Prettier formatting"
-    endif
-endfunction
-
-nnoremap <C-s> :call PrettierFormat()<CR>
-
-" Customize fzf colors to match your color scheme
-let g:fzf_colors = {
-            \ 'fg':      ['fg', 'Normal'],
-            \ 'bg':      ['bg', 'Normal'],
-            \ 'hl':      ['fg', 'Comment'],
-            \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-            \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-            \ 'hl+':     ['fg', 'Statement'],
-            \ 'info':    ['fg', 'PreProc'],
-            \ 'prompt':  ['fg', 'Conditional'],
-            \ 'pointer': ['fg', 'Exception'],
-            \ 'marker':  ['fg', 'Keyword'],
-            \ 'spinner': ['fg', 'Label'],
-            \ 'header':  ['fg', 'Comment']
-            \ }
-" Enable per-command history.
-" CTRL-N and CTRL-P will be automatically bound to next-history and
-" previous-history instead of down and up. If you don't like the change,
-" explicitly bind the keys to down and up in your $FZF_DEFAULT_OPTS.
-let g:fzf_history_dir = '~/.local/share/fzf-history'
-" [Buffers] Jump to the existing window if possible
-let g:fzf_buffers_jump = 1
-nnoremap <c-p> :FZF<CR>
-set nobackup
-set nowritebackup
-
-" Having longer updatetime (default is 4000 ms = 4s) leads to noticeable
-" delays and poor user experience
-set updatetime=300
-
-" Always show the signcolumn, otherwise it would shift the text each time
-" diagnostics appear/become resolved
-set signcolumn=yes
-
-" Use tab for trigger completion with characters ahead and navigate
-" NOTE: There's always complete item selected by default, you may want to enable
-" no select by `"suggest.noselect": true` in your configuration file
-" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
-" other plugin before putting this into your config
+" Use tab for trigger completion
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
       \ CheckBackspace() ? "\<Tab>" :
       \ coc#refresh()
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
-" Make <CR> to accept selected completion item or notify coc.nvim to format
-" <C-g>u breaks current undo, please make your own choice
+" Make <CR> accept selected completion item
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
                               \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
@@ -151,25 +203,16 @@ function! CheckBackspace() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-" Use <c-space> to trigger completion
-if has('nvim')
-  inoremap <silent><expr> <c-space> coc#refresh()
-else
-  inoremap <silent><expr> <c-@> coc#refresh()
-endif
+" Use <c-space> to trigger completion.
+inoremap <silent><expr> <c-space> coc#refresh()
 
-" Use `[g` and `]g` to navigate diagnostics
-" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
-
-" GoTo code navigation
+" GoTo code navigation.
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
-" Use K to show documentation in preview window
+" Use K to show documentation in preview window.
 nnoremap <silent> K :call ShowDocumentation()<CR>
 
 function! ShowDocumentation()
@@ -180,9 +223,6 @@ function! ShowDocumentation()
   endif
 endfunction
 
-" Highlight the symbol and its references when holding the cursor
-autocmd CursorHold * silent call CocActionAsync('highlight')
-
 " Symbol renaming
 nmap <leader>rn <Plug>(coc-rename)
 
@@ -190,79 +230,90 @@ nmap <leader>rn <Plug>(coc-rename)
 xmap <leader>f  <Plug>(coc-format-selected)
 nmap <leader>f  <Plug>(coc-format-selected)
 
-augroup mygroup
+" Prettier Configuration
+" ---------------------
+command! -nargs=0 Prettier :CocCommand prettier.forceFormatDocument
+
+" Custom Key Mappings
+" ------------------
+let mapleader = " "  " Space as leader key
+
+" FZF shortcuts (similar to Telescope)
+nnoremap <leader>ff :Files<CR>
+nnoremap <leader>fg :Rg<CR>
+nnoremap <leader>fb :Buffers<CR>
+nnoremap <leader>fh :Helptags<CR>
+nnoremap <leader>fc :Commands<CR>
+nnoremap <leader>fl :Lines<CR>
+nnoremap <leader>ft :BTags<CR>
+
+" Show file preview with FZF
+nnoremap <leader>fp :Files<CR>
+
+" NERDTree shortcuts
+nnoremap <leader>e :NERDTreeToggle<CR>
+nnoremap <leader>nf :NERDTreeFind<CR>
+
+" Buffer navigation
+nnoremap <leader>bn :bnext<CR>
+nnoremap <leader>bp :bprevious<CR>
+nnoremap <leader>bd :bdelete<CR>
+
+" Window navigation
+nnoremap <C-h> <C-w>h
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-l> <C-w>l
+
+" Window resizing
+nnoremap <M-j> :resize -2<CR>
+nnoremap <M-k> :resize +2<CR>
+nnoremap <M-h> :vertical resize -2<CR>
+nnoremap <M-l> :vertical resize +2<CR>
+
+" Format document
+nnoremap <leader>p :Prettier<CR>
+
+" Escape from terminal mode
+tnoremap <Esc> <C-\><C-n>
+
+" Clear search highlighting
+nnoremap <leader>nh :nohl<CR>
+
+" Save and quit shortcuts
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+nnoremap <leader>wq :wq<CR>
+
+" Move lines up and down
+nnoremap <A-j> :m .+1<CR>==
+nnoremap <A-k> :m .-2<CR>==
+inoremap <A-j> <Esc>:m .+1<CR>==gi
+inoremap <A-k> <Esc>:m .-2<CR>==gi
+vnoremap <A-j> :m '>+1<CR>gv=gv
+vnoremap <A-k> :m '<-2<CR>gv=gv
+
+" Indent blocks of code
+vnoremap < <gv
+vnoremap > >gv
+
+" Toggle spell checking
+nnoremap <leader>sp :set spell!<CR>
+
+" Filetype specific settings
+" -------------------------
+augroup customFiletypes
   autocmd!
-  " Setup formatexpr specified filetype(s)
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-augroup end
+  " Web Development
+  autocmd FileType html,css,javascript,javascriptreact,typescript,typescriptreact,svelte setlocal tabstop=2 softtabstop=2 shiftwidth=2
+  
+  " Python Development
+  autocmd FileType python setlocal tabstop=4 softtabstop=4 shiftwidth=4
+  
+  " Auto format on save for specific file types
+  autocmd BufWritePre *.js,*.jsx,*.ts,*.tsx,*.css,*.html,*.svelte,*.json,*.py Prettier
+augroup END
 
-" Applying code actions to the selected code block
-" Example: `<leader>aap` for current paragraph
-xmap <leader>a  <Plug>(coc-codeaction-selected)
-nmap <leader>a  <Plug>(coc-codeaction-selected)
-
-" Remap keys for applying code actions at the cursor position
-nmap <leader>ac  <Plug>(coc-codeaction-cursor)
-" Remap keys for apply code actions affect whole buffer
-nmap <leader>as  <Plug>(coc-codeaction-source)
-" Apply the most preferred quickfix action to fix diagnostic on the current line
-nmap <leader>qf  <Plug>(coc-fix-current)
-
-" Remap keys for applying refactor code actions
-nmap <silent> <leader>re <Plug>(coc-codeaction-refactor)
-xmap <silent> <leader>r  <Plug>(coc-codeaction-refactor-selected)
-nmap <silent> <leader>r  <Plug>(coc-codeaction-refactor-selected)
-
-" Run the Code Lens action on the current line
-nmap <leader>cl  <Plug>(coc-codelens-action)
-
-" Map function and class text objects
-" NOTE: Requires 'textDocument.documentSymbol' support from the language server
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
-xmap ic <Plug>(coc-classobj-i)
-omap ic <Plug>(coc-classobj-i)
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
-
-
-" Use CTRL-S for selections ranges
-" Requires 'textDocument/selectionRange' support of language server
-nmap <silent> <C-s> <Plug>(coc-range-select)
-xmap <silent> <C-s> <Plug>(coc-range-select)
-
-" Add `:Format` command to format current buffer
-command! -nargs=0 Format :call CocActionAsync('format')
-
-" Add `:Fold` command to fold current buffer
-command! -nargs=? Fold :call     CocAction('fold', <f-args>)
-
-" Add `:OR` command for organize imports of the current buffer
-command! -nargs=0 OR   :call     CocActionAsync('runCommand', 'editor.action.organizeImport')
-
-" Add (Neo)Vim's native statusline support
-" NOTE: Please see `:h coc-status` for integrations with external plugins that
-" provide custom statusline: lightline.vim, vim-airline
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
-
-" Mappings for CoCList
-" Show all diagnostics
-nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
-" Manage extensions
-nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
-" Show commands
-nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
-" Find symbol of current document
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
-" Search workspace symbols
-nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
-" Do default action for next item
-nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
-" Do default action for previous item
-nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
-" Resume latest coc list
-nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+" Install Coc Language Servers on first launch
+" -------------------------------------------
+" Run :CocInstall after first launch
