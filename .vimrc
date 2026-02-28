@@ -101,7 +101,16 @@ call plug#begin('~/.vim/plugged')
   " Spell checking and auto-correct
   Plug 'kamykn/spelunker.vim'                     " Better spell checking
   Plug 'sedm0784/vim-you-autocorrect'             " Auto-correction
+
+  " Claude Code CLI integration
+  Plug 'rishi-opensource/vim-claude-code', { 'tag': 'v1.1.0' }
+
 call plug#end()
+
+" vim-claude-code Configuration
+" -----------------------------
+let g:claude_code_position = 'right'
+let g:claude_code_use_git_root = 1
 
 " Theme Configuration
 " ------------------
