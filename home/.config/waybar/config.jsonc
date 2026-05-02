@@ -1,0 +1,129 @@
+// -*- mode: jsonc -*-
+{
+    "position": "bottom",
+    "spacing": 6,
+    "modules-left": [
+        "sway/workspaces",
+        "sway/window",
+        "sway/mode",
+        "sway/scratchpad"
+    ],
+    "modules-center": [],
+    "modules-right": [
+        "network",
+        "custom/disks",
+        "cpu",
+        "memory",
+        "temperature",
+        "clock#time",
+        "clock#date",
+        "pulseaudio",
+        "idle_inhibitor",
+        "power-profiles-daemon",
+        "tray"
+    ],
+    "sway/workspaces": {
+        "all-outputs": true,
+        "format": "{icon} {name}",
+        "format-icons": {
+            "urgent": "",
+            "focused": "",
+            "default": ""
+        }
+    },
+    "sway/window": {
+        "max-length": 96,
+        "icon": true,
+        "rewrite": {
+            "(.*) — Mozilla Firefox": " $1",
+            "(.*) - Google Chrome": " $1",
+            "(.*) - Chromium": " $1",
+            "(.*) — Discord": " $1",
+            "(.*)Telegram(.*)": " $1"
+        }
+    },
+    "custom/disks": {
+        "exec": "$HOME/.config/waybar/disk-mounts.sh",
+        "interval": 45,
+        "format": " {}",
+        "tooltip": false
+    },
+    "sway/mode": {
+        "format": " <span style=\"italic\">{}</span>"
+    },
+    "sway/scratchpad": {
+        "format": "{icon} {count}",
+        "show-empty": false,
+        "format-icons": ["", ""],
+        "tooltip": true,
+        "tooltip-format": "{app}: {title}"
+    },
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "",
+            "deactivated": ""
+        }
+    },
+    "tray": {
+        "spacing": 10
+    },
+    "clock#time": {
+        "format": " {:%H:%M}",
+        "tooltip-format": "<big>{:%Y-%m-%d %A}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "clock#date": {
+        "format": " {:%Y-%m-%d}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "cpu": {
+        "format": " {usage}%",
+        "interval": 3,
+        "tooltip": false
+    },
+    "memory": {
+        "format": " {percentage}%",
+        "tooltip-format": "{used:human} / {total:human}"
+    },
+    "temperature": {
+        "critical-threshold": 85,
+        "format": " {temperatureC}°C",
+        "format-critical": " {temperatureC}°C",
+        "tooltip": false
+    },
+    "network": {
+        "format-wifi": " {ipaddr}",
+        "format-ethernet": " {ipaddr}",
+        "format-linked": " {ifname} (no IP)",
+        "format-disconnected": " offline",
+        "tooltip-format": "{essid} {ifname}\n{bandwidthDownBits}↓ {bandwidthUpBits}↑",
+        "tooltip-format-wifi": "{essid} ({signalStrength}%) \n{ipaddr}/{cidr}\n{bandwidthDownBits}↓ {bandwidthUpBits}↑",
+        "tooltip-format-ethernet": "{ifname}\n{ipaddr}/{cidr}\n{bandwidthDownBits}↓ {bandwidthUpBits}↑",
+        "tooltip-format-disconnected": "Disconnected"
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-bluetooth": " {icon} {volume}%",
+        "format-muted": " mute",
+        "format-source-muted": " mute",
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol",
+        "tooltip-format": "{desc}"
+    },
+    "power-profiles-daemon": {
+        "format": "{icon}",
+        "tooltip-format": "Power profile: {profile}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "",
+            "balanced": "",
+            "power-saver": ""
+        }
+    }
+}
