@@ -8,6 +8,7 @@ window#waybar {
     background-color: #0a0a0a;
     color: #b8b8b8;
     border-top: 1px solid #2a2a2a;
+    min-height: 38px;
 }
 
 window#waybar.hidden {
@@ -63,6 +64,7 @@ button:hover {
     font-weight: 500;
 }
 
+/* Right-column segments: slightly lighter grays than the bar base */
 #custom-disks,
 #cpu,
 #memory,
@@ -76,30 +78,29 @@ button:hover {
 #wireplumber,
 #idle_inhibitor,
 #tray,
-#mode,
 #scratchpad,
 #power-profiles-daemon,
 #backlight,
 #language {
-    padding: 0 10px;
-    background-color: #141414;
-    color: #b5b5b5;
-    border-left: 1px solid #222;
+    padding: 0 12px;
+    background-color: #242424;
+    color: #c4c4c4;
+    border-left: 1px solid #3a3a3a;
 }
 
 #custom-disks {
-    color: #c8c8c8;
+    color: #d6d6d6;
     font-size: 12px;
 }
 
 #cpu,
 #memory,
 #temperature {
-    background-color: #121212;
+    background-color: #262626;
 }
 
 #network {
-    background-color: #161616;
+    background-color: #282828;
 }
 
 #network.disconnected {
@@ -107,41 +108,41 @@ button:hover {
 }
 
 #clock-time {
-    background-color: #181818;
-    color: #e0e0e0;
+    background-color: #2a2a2a;
+    color: #eaeaea;
     font-weight: 600;
 }
 
 #clock-date {
-    background-color: #141414;
-    color: #a8a8a8;
+    background-color: #262626;
+    color: #bdbdbd;
 }
 
 #pulseaudio {
-    background-color: #121212;
+    background-color: #262626;
 }
 
 #pulseaudio.muted {
-    color: #707070;
+    color: #888;
 }
 
 #temperature.critical {
     color: #d08080;
-    background-color: #1f1515;
+    background-color: #2c2222;
 }
 
 #idle_inhibitor {
-    background-color: #101010;
+    background-color: #232323;
 }
 
 #idle_inhibitor.activated {
-    background-color: #1a1a1a;
-    color: #dcdcdc;
+    background-color: #2e2e2e;
+    color: #ececec;
 }
 
 #power-profiles-daemon {
     padding-right: 12px;
-    background-color: #131313;
+    background-color: #252525;
 }
 
 #power-profiles-daemon.performance {
@@ -157,7 +158,7 @@ button:hover {
 }
 
 #tray {
-    background-color: #0f0f0f;
+    background-color: #222222;
 }
 
 #tray > .passive {
@@ -168,6 +169,7 @@ button:hover {
     -gtk-icon-effect: highlight;
 }
 
+/* Left scratchpad: keep a touch darker than right modules */
 #scratchpad {
-    background: #151515;
+    background: #1c1c1c;
 }

@@ -1,6 +1,7 @@
 // -*- mode: jsonc -*-
 {
     "position": "bottom",
+    "height": 38,
     "spacing": 6,
     "modules-left": [
         "sway/workspaces",
