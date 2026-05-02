@@ -65,7 +65,7 @@ init_app_dict() {
                 ["wget"]="wget"
                 ["zsh"]="zsh"
                 ["stow"]="stow"
-                ["nodejs"]="nodejs npm"
+                ["nodejs"]="nodejs nodejs-npm"
                 ["yarn"]="yarn"
                 ["chrome"]="google-chrome"
                 ["vscode"]="code"
@@ -171,33 +171,53 @@ update_system() {
     print_success "System updated successfully"
 }
 
-# Install package
+# Install package (package_name may be space-separated, e.g. "nodejs nodejs-npm" on Fedora)
 install_package() {
     local package_name="$1"
     local display_name="$2"
+    local -a pkgs=()
+    read -ra pkgs <<< "$package_name"
     
     print_info "Installing $display_name..."
     
     case $DISTRO in
         "arch")
-            if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-                sudo pacman -S --noconfirm "$package_name"
+            local -a need=()
+            for p in "${pkgs[@]}"; do
+                if ! pacman -Qi "$p" >/dev/null 2>&1; then
+                    need+=("$p")
+                fi
+            done
+            if ((${#need[@]})); then
+                sudo pacman -S --noconfirm "${need[@]}"
                 print_success "$display_name installed"
             else
                 print_warning "$display_name already installed"
             fi
             ;;
         "debian")
-            if ! dpkg -l | grep -q "^ii  $package_name "; then
-                sudo apt install -y "$package_name"
+            local -a need=()
+            for p in "${pkgs[@]}"; do
+                if ! dpkg -l 2>/dev/null | grep -q "^ii  $p "; then
+                    need+=("$p")
+                fi
+            done
+            if ((${#need[@]})); then
+                sudo apt install -y "${need[@]}"
                 print_success "$display_name installed"
             else
                 print_warning "$display_name already installed"
             fi
             ;;
         "fedora")
-            if ! rpm -q "$package_name" >/dev/null 2>&1; then
-                sudo dnf install -y "$package_name"
+            local -a need=()
+            for p in "${pkgs[@]}"; do
+                if ! rpm -q "$p" >/dev/null 2>&1; then
+                    need+=("$p")
+                fi
+            done
+            if ((${#need[@]})); then
+                sudo dnf install -y "${need[@]}"
                 print_success "$display_name installed"
             else
                 print_warning "$display_name already installed"
@@ -308,13 +328,9 @@ install_nodejs_tools() {
         print_warning "Yarn already installed"
     fi
     
-    # Install pnpm
-    print_info "Installing pnpm..."
-    if ! command -v pnpm >/dev/null 2>&1; then
-        npm install -g pnpm
-        print_success "pnpm installed"
-    else
-        print_warning "pnpm already installed"
+    # Install pnpm from distro repos only (Fedora: dnf install pnpm — no npm -g)
+    if [[ -n "${APP_DICT[pnpm]:-}" ]]; then
+        install_package "${APP_DICT[pnpm]}" "pnpm"
     fi
 }
 
@@ -371,6 +387,13 @@ setup_oh_my_zsh() {
         git clone https://github.com/zsh-users/zsh-history-substring-search "$ZSH_CUSTOM/plugins/zsh-history-substring-search"
         print_success "zsh-history-substring-search installed"
     fi
+    
+    # Ensure ~/.zshrc exists (e.g. if a previous setup step moved it away)
+    if [[ ! -f "$HOME/.zshrc" ]] && [[ -f "$HOME/.oh-my-zsh/templates/zshrc.zsh-template" ]]; then
+        print_info "Creating ~/.zshrc from Oh My Zsh template..."
+        cp "$HOME/.oh-my-zsh/templates/zshrc.zsh-template" "$HOME/.zshrc"
+        print_success "~/.zshrc created"
+    fi
 }
 
 # Setup dotfiles
@@ -388,26 +411,22 @@ setup_dotfiles() {
         print_success "Dotfiles updated"
     fi
     
-    print_info "Setting up dotfiles with stow..."
-    cd "$DOTFILES_DIR"
+    print_info "Stowing GNU Stow package 'home' into \$HOME..."
+    cd "$DOTFILES_DIR" || return
     
-    # Backup existing configs
-    print_info "Backing up existing configs..."
-    [[ -f "$HOME/.zshrc" ]] && mv "$HOME/.zshrc" "$HOME/.zshrc.backup.$(date +%Y%m%d_%H%M%S)"
-    
-    # Use stow to link dotfiles
-    if command -v stow >/dev/null 2>&1; then
-        # Assuming dotfiles repo has directories like: zsh/, git/, etc.
-        for dir in */; do
-            if [[ -d "$dir" ]]; then
-                print_info "Stowing $dir..."
-                stow "$dir"
-            fi
-        done
-        print_success "Dotfiles setup completed with stow"
-    else
-        print_warning "Stow not found, manual setup required"
+    if ! command -v stow >/dev/null 2>&1; then
+        print_warning "Stow not installed; install stow and re-run this step."
+        return
     fi
+    if [[ ! -d "$DOTFILES_DIR/home" ]]; then
+        print_error "Missing stow package directory: $DOTFILES_DIR/home"
+        return
+    fi
+    
+    # home/ mirrors $HOME: .config/, .vimrc, Wallpapers/, etc.
+    # stow merges into existing ~/.config (other apps keep their trees).
+    stow --restow --target="$HOME" home
+    print_success "Dotfiles stowed (home → \$HOME). Conflicts: stow -n --adopt home (see stow(8))."
 }
 
 # Change default shell to zsh
@@ -463,7 +482,7 @@ main() {
     
     print_header "SETUP COMPLETED"
     print_success "All packages and configurations have been installed!"
-    print_info "Please restart your terminal or run 'source ~/.zshrc' to apply changes"
+    print_info "Open a new terminal or run:  zsh -l   then optionally   source ~/.zshrc"
     print_info "Setup log saved to: $LOG_FILE"
     
     echo -e "${GREEN}🎉 Setup completed successfully!${NC}"
