@@ -1,0 +1,14 @@
+# Smoke-test image: Fedora. Build: docker build -f docker/Dockerfile.fedora -t dotfiles-smoke:fedora .
+FROM fedora:latest
+
+RUN dnf -y install bash findutils which sudo ca-certificates curl gnupg2 \
+    && dnf clean all
+
+WORKDIR /dotfiles
+ENV ROOT=/dotfiles
+
+COPY docker/smoke-verify.sh /usr/local/bin/smoke-verify.sh
+COPY docker/smoke-install.sh /usr/local/bin/smoke-install.sh
+RUN chmod +x /usr/local/bin/smoke-verify.sh /usr/local/bin/smoke-install.sh
+
+ENTRYPOINT ["/usr/local/bin/smoke-verify.sh"]

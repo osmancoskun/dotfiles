@@ -1,0 +1,14 @@
+# Smoke-test image: Arch. Build: docker build -f docker/Dockerfile.arch -t dotfiles-smoke:arch .
+FROM archlinux:latest
+
+RUN pacman -Sy --noconfirm bash sudo filesystem grep coreutils findutils curl gnupg \
+    && pacman -Scc --noconfirm
+
+WORKDIR /dotfiles
+ENV ROOT=/dotfiles
+
+COPY docker/smoke-verify.sh /usr/local/bin/smoke-verify.sh
+COPY docker/smoke-install.sh /usr/local/bin/smoke-install.sh
+RUN chmod +x /usr/local/bin/smoke-verify.sh /usr/local/bin/smoke-install.sh
+
+ENTRYPOINT ["/usr/local/bin/smoke-verify.sh"]
