@@ -24,7 +24,7 @@
         "tray"
     ],
     "sway/workspaces": {
-        "all-outputs": true,
+        "all-outputs": false,
         "format": "{icon} {name}",
         "format-icons": {
             "urgent": "",
