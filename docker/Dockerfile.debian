@@ -1,0 +1,15 @@
+# Smoke-test image: Debian. Build: docker build -f docker/Dockerfile.debian -t dotfiles-smoke:debian .
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bash ca-certificates sudo findutils curl gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /dotfiles
+ENV ROOT=/dotfiles
+
+COPY docker/smoke-verify.sh /usr/local/bin/smoke-verify.sh
+COPY docker/smoke-install.sh /usr/local/bin/smoke-install.sh
+RUN chmod +x /usr/local/bin/smoke-verify.sh /usr/local/bin/smoke-install.sh
+
+ENTRYPOINT ["/usr/local/bin/smoke-verify.sh"]
