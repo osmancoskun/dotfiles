@@ -198,8 +198,24 @@ main() {
     persist_choice="${persist_choice:-1}"
 
     if [[ "$persist_choice" == "2" ]]; then
-        local cfgdir="${XDG_CONFIG_HOME:-$HOME/.config}/sway/config.d"
-        mkdir -p "$cfgdir"
+        local config_root="${XDG_CONFIG_HOME:-$HOME/.config}"
+        local sway_cfg_root="$config_root/sway"
+        local cfgdir="$sway_cfg_root/config.d"
+        if [[ -L "$sway_cfg_root" && ! -d "$sway_cfg_root" ]]; then
+            local link_target
+            link_target="$(readlink "$sway_cfg_root" 2>/dev/null || printf '%s' '?')"
+            err "Cannot write monitor config: $sway_cfg_root is a broken symlink -> $link_target"
+            err "Fix or remove that symlink, then run monitor setup again."
+            exit 1
+        fi
+        if [[ -e "$sway_cfg_root" && ! -d "$sway_cfg_root" ]]; then
+            err "Cannot write monitor config: $sway_cfg_root exists but is not a directory."
+            exit 1
+        fi
+        if ! install -d "$cfgdir"; then
+            err "Could not create monitor config directory: $cfgdir"
+            exit 1
+        fi
         local cfgfile="$cfgdir/85-user-monitor-setup.conf"
         local ts
         ts="$(date -Iseconds)"
