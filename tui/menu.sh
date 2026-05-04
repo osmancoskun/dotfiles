@@ -44,6 +44,11 @@ tui_shell_main_menu() {
             printf '%b\n' "  ${dim}${strike}5) Monitors — Sway (install sway to enable)${rst}"
         fi
         printf '%s\n' '  6) Wallpaper (Bing / NASA / Wikipedia — swaybg)'
+        if (( sway_ok )); then
+            printf '%s\n' '  7) Waybar config — link ~/.config/waybar from dotfiles'
+        else
+            printf '%b\n' "  ${dim}${strike}7) Waybar config — requires sway setup${rst}"
+        fi
         printf '%s\n' '' '  Q) Quit' ''
         printf '%b\n' "${dim}  In submenus: B then Enter → main menu${rst}" ''
     } >&2
@@ -55,9 +60,9 @@ tui_shell_main_menu() {
 
     local raw
     if [[ -r /dev/tty ]]; then
-        read -r -p "Choice [1/2/3/4/5/6/Q]: " raw </dev/tty
+        read -r -p "Choice [1/2/3/4/5/6/7/Q]: " raw </dev/tty
     else
-        read -r -p "Choice [1/2/3/4/5/6/Q]: " raw
+        read -r -p "Choice [1/2/3/4/5/6/7/Q]: " raw
     fi
     raw="${raw:-Q}"
     raw="${raw//[$'\t\r\n']/}"
@@ -68,6 +73,7 @@ tui_shell_main_menu() {
         4) printf '%s\n' "4" ;;
         5) printf '%s\n' "5" ;;
         6) printf '%s\n' "6" ;;
+        7) printf '%s\n' "7" ;;
         [Qq]) printf '%s\n' "Q" ;;
         [Bb]) printf '%s\n' "B" ;; # no-op: already at main menu (B is for submenus)
         *) printf '%s\n' "Q" ;;
@@ -196,6 +202,32 @@ tui_run_wallpaper_setup() {
     tui_wait_continue_or_back || return 0
 }
 
+tui_run_waybar_setup() {
+    print_header "WAYBAR CONFIG"
+    if ! _tui_sway_available; then
+        print_warning "Sway is not installed (sway + swaymsg not found in PATH). Install sway from your distro, then choose 7 again."
+        tui_wait_continue_or_back || return 0
+        return 0
+    fi
+    local root
+    root="$(_tui_repo_root)"
+    set +e
+    trap '' ERR
+    bash "$root/scripts/setup/waybar.sh"
+    local ec=$?
+    trap 'error_handler $LINENO' ERR
+    set -e
+    if (( ec == TUI_BACK_TO_MAIN )); then
+        return 0
+    fi
+    if (( ec == 0 )); then
+        print_success "Waybar config setup finished."
+    else
+        print_warning "Waybar config setup exited $ec."
+    fi
+    tui_wait_continue_or_back || return 0
+}
+
 run_main_menu() {
     while true; do
         local choice
@@ -210,6 +242,7 @@ run_main_menu() {
             4) tui_run_dotfiles_shell ;;
             5) tui_run_monitors_setup ;;
             6) tui_run_wallpaper_setup ;;
+            7) tui_run_waybar_setup ;;
             B | b) ;; # already at main menu
             Q | q) break ;;
             *) ;;
