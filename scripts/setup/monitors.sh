@@ -130,8 +130,10 @@ main() {
 
     declare -A TRANSFORM_OF=()
     declare -A SCALE_OF=()
+    declare -A WORKSPACES_OF=()
+    declare -A WS_OWNER=()
 
-    local out cur_t cur_s label t_in s_in
+    local out cur_t cur_s label t_in s_in ws_in ws_norm ws_tok
     for out in "${ORDERED_NAMES[@]}"; do
         cur_t=$(jq -r --arg n "$out" '.[] | select(.name == $n) | .transform // "normal"' <<<"$sorted")
         cur_s=$(jq -r --arg n "$out" '.[] | select(.name == $n) | .scale // 1' <<<"$sorted")
@@ -157,6 +159,27 @@ main() {
             exit 1
         fi
         SCALE_OF[$out]=$s_in
+
+        read_tty "  Workspaces for this output (e.g. 1 2, comma/space; Enter = none): " ws_in
+        ws_in="${ws_in//,/ }"
+        ws_norm=""
+        for ws_tok in $ws_in; do
+            if ! [[ "$ws_tok" =~ ^[0-9]+$ ]] || (( ws_tok < 1 || ws_tok > 99 )); then
+                err "Invalid workspace token '$ws_tok' for $out (use 1-99)."
+                exit 1
+            fi
+            if [[ -n "${WS_OWNER[$ws_tok]:-}" && "${WS_OWNER[$ws_tok]}" != "$out" ]]; then
+                err "Workspace $ws_tok assigned to multiple outputs: ${WS_OWNER[$ws_tok]} and $out."
+                exit 1
+            fi
+            WS_OWNER[$ws_tok]="$out"
+            if [[ -z "$ws_norm" ]]; then
+                ws_norm="$ws_tok"
+            else
+                ws_norm="$ws_norm $ws_tok"
+            fi
+        done
+        WORKSPACES_OF[$out]="$ws_norm"
     done
 
     info "Applying mode, transform, and scale…"
@@ -188,6 +211,16 @@ main() {
         swaymsg "output $o position ${x} 0" >/dev/null 2>&1 || warn "position failed for $o"
         x=$((x + w))
     done
+
+    info "Applying workspace mapping…"
+    local has_workspace_map=0 ws
+    for o in "${ORDERED_NAMES[@]}"; do
+        for ws in ${WORKSPACES_OF[$o]:-}; do
+            has_workspace_map=1
+            swaymsg "workspace number $ws, move workspace to output $o" >/dev/null 2>&1 || warn "workspace $ws mapping failed for $o"
+        done
+    done
+    (( has_workspace_map == 0 )) && info "No workspace mapping selected."
 
     printf '\n%s\n' "Keep this layout how?" >&2
     printf '%s\n' "  B) Back to main setup menu" >&2
@@ -236,6 +269,16 @@ main() {
                 w=$(jq -r --arg n "$o" '.[] | select(.name == $n) | .rect.width' <<<"$after")
                 printf 'output "%s" position %s 0\n' "$o" "$x"
                 x=$((x + w))
+            done
+            has_workspace_map=0
+            for o in "${ORDERED_NAMES[@]}"; do
+                for ws in ${WORKSPACES_OF[$o]:-}; do
+                    if (( has_workspace_map == 0 )); then
+                        printf '\n# Workspace to output mapping\n'
+                        has_workspace_map=1
+                    fi
+                    printf 'workspace number %s output %s\n' "$ws" "$o"
+                done
             done
         } >"$cfgfile"
         info "Wrote: $cfgfile"
