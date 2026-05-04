@@ -104,6 +104,7 @@ print_setup_usage() {
         "  dotfiles-install  Non-interactive (set DOTFILES_APPS=omz,chsh)" \
         "  monitors | 5      Sway monitor helper (same as menu 5; needs sway)" \
         "  wallpaper | 6     Interactive daily wallpaper setup (Bing/NASA/Wiki)" \
+        "  waybar | 7        Link ~/.config/waybar from dotfiles (same as menu 7; needs sway)" \
         "  wallpaper-install Same as running scripts/setup/wallpaper.sh" \
         "  -h | --help       Show this help" "" \
         "REPO_APPS keys: git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm" \
@@ -194,6 +195,9 @@ main() {
             ;;
         wallpaper | 6)
             tui_run_wallpaper_setup
+            ;;
+        waybar | 7)
+            tui_run_waybar_setup
             ;;
         wallpaper-install)
             set +e
