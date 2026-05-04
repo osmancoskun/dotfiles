@@ -1,7 +1,7 @@
 // -*- mode: jsonc -*-
 {
     "position": "bottom",
-    "height": 38,
+    "height": 30,
     "spacing": 6,
     "modules-left": [
         "sway/workspaces",
@@ -11,7 +11,7 @@
     ],
     "modules-center": [],
     "modules-right": [
-        "network",
+        "custom/net-ip",
         "custom/disks",
         "cpu",
         "memory",
@@ -43,11 +43,24 @@
             "(.*)Telegram(.*)": " $1"
         }
     },
+    "custom/net-ip": {
+        "return-type": "json",
+        "exec": "$HOME/.config/waybar/net-cycle.sh",
+        "interval": 5,
+        "signal": 30,
+        "on-click": "$HOME/.config/waybar/net-cycle.sh cycle; pkill -RTMIN+30 waybar",
+        "format": "{text}",
+        "tooltip": true
+    },
     "custom/disks": {
+        "return-type": "json",
         "exec": "$HOME/.config/waybar/disk-mounts.sh",
         "interval": 45,
-        "format": " {}",
-        "tooltip": false
+        "signal": 31,
+        "on-click": "$HOME/.config/waybar/disk-mounts.sh cycle; pkill -RTMIN+31 waybar",
+        "format": " {text}",
+        "tooltip": true,
+        "escape": false
     },
     "sway/mode": {
         "format": " <span style=\"italic\">{}</span>"
@@ -91,16 +104,6 @@
         "format": " {temperatureC}°C",
         "format-critical": " {temperatureC}°C",
         "tooltip": false
-    },
-    "network": {
-        "format-wifi": " {ipaddr}",
-        "format-ethernet": " {ipaddr}",
-        "format-linked": " {ifname} (no IP)",
-        "format-disconnected": " offline",
-        "tooltip-format": "{essid} {ifname}\n{bandwidthDownBits}↓ {bandwidthUpBits}↑",
-        "tooltip-format-wifi": "{essid} ({signalStrength}%) \n{ipaddr}/{cidr}\n{bandwidthDownBits}↓ {bandwidthUpBits}↑",
-        "tooltip-format-ethernet": "{ifname}\n{ipaddr}/{cidr}\n{bandwidthDownBits}↓ {bandwidthUpBits}↑",
-        "tooltip-format-disconnected": "Disconnected"
     },
     "pulseaudio": {
         "format": "{icon} {volume}%",
