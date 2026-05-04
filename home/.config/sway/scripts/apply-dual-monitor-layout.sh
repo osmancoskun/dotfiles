@@ -94,9 +94,8 @@ for _try in $(seq 1 40); do
     log "applying fourk=$fourk ($m4) twok=$twok ($m2)"
     swaymsg output "$fourk" mode "$m4" scale "$SCALE_4K" position 0 0 >>"$LOG" 2>&1 || log "swaymsg fourk failed $?"
     swaymsg output "$twok" mode "$m2" scale "$SCALE_2K" position "$LEFT_LOGICAL_W" 0 >>"$LOG" 2>&1 || log "swaymsg twok failed $?"
-    # Treat 4K as primary: workspace 1 lives there + input focus (no X11-style PRIMARY flag in sway).
-    swaymsg workspace number 1 output "$fourk" >>"$LOG" 2>&1 || log "workspace assign failed $?"
-    swaymsg focus output "$fourk" >>"$LOG" 2>&1 || log "focus output failed $?"
+    # 4K = primary: pin workspace 1 to the 4K output, then focus it (assign-only IPC is flaky; use move).
+    swaymsg "workspace number 1; move workspace to output $fourk; focus output $fourk; workspace number 1" >>"$LOG" 2>&1 || log "workspace primary sequence failed $?"
     log "done"
     exit 0
   fi
