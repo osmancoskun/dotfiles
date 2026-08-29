@@ -33,15 +33,17 @@ Want the full bootstrap (packages, browsers, Node, Oh My Zsh, …)?
 ```
 .
 ├── home/                       # stow package — symlinked into $HOME
+│   ├── .zshrc                  # Oh My Zsh + plugins
 │   ├── .vimrc
 │   └── .config/
-│       ├── alacritty/          # terminal
+│       ├── foot/               # terminal (Sway default)
+│       ├── alacritty/          # alternate terminal
 │       ├── sway/               # window manager + wallpaper-daily, monitor layout
 │       └── waybar/             # bar + custom disk / network modules
 ├── setup.sh                    # interactive bootstrap (single entry point)
 ├── lib/                        # shell modules sourced by setup.sh
 ├── tui/menu.sh                 # text menu rendered by setup.sh
-├── scripts/setup/              # standalone helpers (wallpaper, monitors, waybar)
+├── scripts/setup/              # standalone helpers (wallpaper, monitors, waybar, shell-config)
 └── docker/                     # smoke-test dotfiles install in clean containers
 ```
 
@@ -78,7 +80,7 @@ stow --delete --target="$HOME" home
   1) Update system
   2) Repository packages (git, jq, Node.js, yarn, pnpm, …)
   3) Third-party applications (Chrome, VS Code, Cursor, Discord, …)
-  4) Dotfiles & shell (Oh My Zsh, chsh to zsh)
+  4) Dotfiles & shell (zsh, chsh, Oh My Zsh, configs)
   5) Monitors — Sway (layout / outputs)
   6) Wallpaper (Bing / NASA / Wikipedia — swaybg)
   7) Waybar config — link ~/.config/waybar from dotfiles
@@ -94,7 +96,7 @@ Each menu item also has a direct CLI form:
 ```bash
 ./setup.sh repo              # 2  — pick repo packages interactively
 ./setup.sh apps              # 3  — pick third-party apps interactively
-./setup.sh dotfiles          # 4  — Oh My Zsh + chsh
+./setup.sh dotfiles          # 4  — zsh, chsh, Oh My Zsh, shell configs
 ./setup.sh monitors          # 5  — Sway monitor wizard (sway required)
 ./setup.sh wallpaper         # 6  — daily wallpaper installer
 ./setup.sh waybar            # 7  — link ~/.config/waybar from dotfiles
@@ -108,7 +110,7 @@ You can drive each step from environment variables:
 ```bash
 REPO_APPS=git,jq,ripgrep,nodejs,yarn   ./setup.sh repo-install
 DESKTOP_APPS=chrome,vscode,cursor      ./setup.sh apps-install
-DOTFILES_APPS=omz,chsh                 ./setup.sh dotfiles-install
+DOTFILES_APPS=zsh,chsh,omz,config     ./setup.sh dotfiles-install
 ./setup.sh wallpaper-install
 ```
 
@@ -118,7 +120,7 @@ Valid keys (also listed by `./setup.sh -h`):
 |-------------------|-------------------------------------------------------------------------------------------------------------------|
 | `REPO_APPS`       | `git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm`   |
 | `DESKTOP_APPS`    | `chrome, vscode, warp, cloudflared, cursor, discord`                                                              |
-| `DOTFILES_APPS`   | `omz, chsh`                                                                                                       |
+| `DOTFILES_APPS`   | `zsh, chsh, omz, config`                                                                                          |
 
 Logs go to **`~/setup.log`**.
 
@@ -128,9 +130,19 @@ Logs go to **`~/setup.log`**.
 
 ## What gets configured
 
+### Foot — `home/.config/foot/foot.ini`
+
+Default terminal for Sway (`set $term foot`). **Cascadia Code** at **14pt**. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
+
+Install on Fedora: `sudo dnf install foot cascadia-code-fonts`
+
+### Zsh — `home/.zshrc`
+
+Oh My Zsh config with **git**, **zsh-autosuggestions**, **zsh-history-substring-search**, and **zsh-syntax-highlighting**. Install OMZ + plugins via menu **4**, then link this file with the *config* step. Local overrides: `~/.zshrc.local`.
+
 ### Alacritty — `home/.config/alacritty/alacritty.toml`
 
-Terminal config. Drop-in: install Alacritty from your distro and you’re done.
+Legacy/alternate terminal config (Cascadia Code 12pt). Sway defaults to **foot**; keep this if you still use Alacritty elsewhere.
 
 ### Vim — `home/.vimrc`
 
@@ -217,7 +229,7 @@ Removable disks are picked up automatically; nothing to do for USB drives.
 
 ### Monitor layout
 
-* **One-off / interactive:** `./setup.sh monitors` (or menu **5**) — pick orientation, scale, left-to-right order; optionally write a `config.d/` snippet.
+* **One-off / interactive:** `./setup.sh monitors` (or menu **5**) — lists active and disabled outputs; pick orientation, scale, left-to-right order; optionally write a `config.d/` snippet. In the order step, use `0` or an out-of-range index to skip a slot; monitors not listed are disabled via `output … disable`.
 * **Manual:** edit `home/.config/sway/config.d/50-dual-monitor-layout.conf` and `scripts/apply-dual-monitor-layout.sh`.
 
 ### Wallpapers
@@ -242,9 +254,9 @@ You don’t need this section to use the dotfiles, but it’s useful if you want
 | `desktop-apps.sh`     | Step **3** (third-party apps). Adds vendor repo only for picked apps.         |
 | `node.sh`             | Node.js / Yarn / pnpm helpers (used by repo-packages).                        |
 | `apps.sh`             | High-level `install_*` helpers shared between steps.                          |
-| `omz.sh`              | Oh My Zsh installer.                                                          |
-| `shell.sh`            | `chsh` to zsh helper.                                                         |
-| `dotfiles-step.sh`    | Step **4** (omz + chsh).                                                      |
+| `omz.sh`              | Oh My Zsh + plugin installer.                                                 |
+| `shell.sh`            | Install zsh, `chsh` to zsh.                                                   |
+| `dotfiles-step.sh`    | Step **4** (zsh → chsh → omz → config).                                       |
 | `numbered-prompt.sh`  | Numbered checklist UI shared by all picker steps.                             |
 | `tui-back.sh`         | `B → main menu` exit code (`TUI_BACK_TO_MAIN`).                               |
 
