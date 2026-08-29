@@ -30,12 +30,28 @@ fi
 
 filter_outputs_json() {
     jq '[.[] | select(.name != null)
-        | select(.name | ascii_downcase | contains("headless") | not)
-        | select((.active == true) or (.current_mode != null))]' <<<"$1"
+        | select(.name | ascii_downcase | contains("headless") | not)]' <<<"$1"
 }
 
 sort_outputs_lr_json() {
-    jq 'sort_by((.rect.x // 0), .name)' <<<"$1"
+    jq 'sort_by(
+        (if .active == true then (.rect.x // 0) else 999999 end),
+        .name
+    )' <<<"$1"
+}
+
+output_is_active() {
+    jq -e --arg n "$1" '.[] | select(.name == $n) | .active == true' <<<"$2" >/dev/null 2>&1
+}
+
+pick_output_mode() {
+    jq -r --arg n "$1" '
+        .[] | select(.name == $n) |
+        if .current_mode != null then "\(.current_mode.width)x\(.current_mode.height)"
+        elif ((.modes // []) | length) > 0 then
+            (.modes | max_by(.width * .height) | "\(.width)x\(.height)")
+        else empty end
+    ' <<<"$2"
 }
 
 display_label() {
@@ -43,6 +59,14 @@ display_label() {
         .[] | select(.name == $n)
         | "\(.make // "—") / \(.model // "—")"
     ' <<<"$2"
+}
+
+output_status_tag() {
+    if output_is_active "$1" "$2"; then
+        printf '%s' ""
+    else
+        printf '%s' " [disabled]"
+    fi
 }
 
 read_tty() {
@@ -68,6 +92,17 @@ valid_transform() {
     esac
 }
 
+is_disable_token() {
+    local tok=$1 max=$2
+    case "${tok,,}" in
+        0 | - | x | disable | disabled | off | none | skip) return 0 ;;
+    esac
+    if [[ "$tok" =~ ^[0-9]+$ ]] && (( tok < 1 || tok > max )); then
+        return 0
+    fi
+    return 1
+}
+
 scale_ok() {
     awk -v s="$1" 'BEGIN { if (s <= 0 || s > 10) exit 1; exit 0 }'
 }
@@ -81,7 +116,7 @@ main() {
     count="$(jq 'length' <<<"$filtered")"
 
     if [[ "$count" == "0" ]]; then
-        err "No usable outputs (nothing active / no current_mode, or only headless)."
+        err "No outputs found (only headless or empty get_outputs)."
         exit 1
     fi
 
@@ -89,30 +124,54 @@ main() {
 
     mapfile -t SORTED_NAMES < <(jq -r '.[].name' <<<"$sorted")
 
-    printf '\n%s\n' "Detected outputs (left → right by current layout):" >&2
-    local i name vendor_model
+    declare -a ACTIVE_NAMES=()
+    local _n
+    for _n in "${SORTED_NAMES[@]}"; do
+        if output_is_active "$_n" "$sorted"; then
+            ACTIVE_NAMES+=("$_n")
+        fi
+    done
+
+    printf '\n%s\n' "Detected outputs (active left → right, then disabled):" >&2
+    local i name vendor_model status
     for i in "${!SORTED_NAMES[@]}"; do
         name="${SORTED_NAMES[i]}"
         vendor_model=$(display_label "$name" "$sorted")
-        printf '  %d) %-20s  %s\n' "$((i + 1))" "$name" "$vendor_model" >&2
+        status=$(output_status_tag "$name" "$sorted")
+        printf '  %d) %-20s  %s%s\n' "$((i + 1))" "$name" "$vendor_model" "$status" >&2
     done
 
     printf '\n%s\n' "Left-to-right order: enter 1-based indices (spaces or commas)." >&2
-    printf '%s\n' "Enter = keep the order printed above. B = back to main setup menu." >&2
+    printf '%s\n' "Use 0 or an out-of-range number to skip/disable a slot." >&2
+    printf '%s\n' "Monitors not listed are disabled. Enter = keep the order printed above." >&2
+    printf '%s\n' "B = back to main setup menu." >&2
     local order_line
     read_tty "> " order_line
     order_line="${order_line//,/ }"
 
     declare -a ORDERED_NAMES=()
     if [[ -z "${order_line// }" ]]; then
-        ORDERED_NAMES=("${SORTED_NAMES[@]}")
-        info "Using default order: ${ORDERED_NAMES[*]}"
+        if ((${#ACTIVE_NAMES[@]})); then
+            ORDERED_NAMES=("${ACTIVE_NAMES[@]}")
+            info "Using default order (active only): ${ORDERED_NAMES[*]}"
+        else
+            ORDERED_NAMES=("${SORTED_NAMES[@]}")
+            info "No active outputs; using full list: ${ORDERED_NAMES[*]}"
+        fi
     else
         declare -A seen=()
         local tok
         for tok in $order_line; do
-            if ! [[ "$tok" =~ ^[0-9]+$ ]] || (( tok < 1 || tok > count )); then
-                err "Invalid index in order: $tok (use 1–$count)"
+            if is_disable_token "$tok" "$count"; then
+                if [[ "$tok" =~ ^[0-9]+$ ]] && (( tok > count )); then
+                    warn "Index $tok not found — treating as disable"
+                elif [[ "$tok" =~ ^[0-9]+$ ]] && (( tok == 0 )); then
+                    info "Disable slot (0)"
+                fi
+                continue
+            fi
+            if ! [[ "$tok" =~ ^[0-9]+$ ]]; then
+                err "Invalid token in order: $tok (use 1–$count, or 0/disable to skip)"
                 exit 1
             fi
             if [[ -n "${seen[$tok]:-}" ]]; then
@@ -122,10 +181,29 @@ main() {
             seen[$tok]=1
             ORDERED_NAMES+=("${SORTED_NAMES[$((tok - 1))]}")
         done
-        if ((${#ORDERED_NAMES[@]} != count)); then
-            err "Order must list exactly $count distinct indices (you gave ${#ORDERED_NAMES[@]})."
+        if ((${#ORDERED_NAMES[@]} == 0)); then
+            err "No monitors selected; order must include at least one valid index."
             exit 1
         fi
+        info "Enabled outputs (left → right): ${ORDERED_NAMES[*]}"
+    fi
+
+    declare -a DISABLED_NAMES=()
+    local _name _enabled
+    for _name in "${SORTED_NAMES[@]}"; do
+        _enabled=0
+        for out in "${ORDERED_NAMES[@]}"; do
+            if [[ "$out" == "$_name" ]]; then
+                _enabled=1
+                break
+            fi
+        done
+        if (( _enabled == 0 )); then
+            DISABLED_NAMES+=("$_name")
+        fi
+    done
+    if ((${#DISABLED_NAMES[@]})); then
+        info "Disabled outputs: ${DISABLED_NAMES[*]}"
     fi
 
     declare -A TRANSFORM_OF=()
@@ -133,13 +211,18 @@ main() {
     declare -A WORKSPACES_OF=()
     declare -A WS_OWNER=()
 
-    local out cur_t cur_s label t_in s_in ws_in ws_norm ws_tok
+    local out cur_t cur_s label t_in s_in ws_in ws_norm ws_tok out_active
     for out in "${ORDERED_NAMES[@]}"; do
         cur_t=$(jq -r --arg n "$out" '.[] | select(.name == $n) | .transform // "normal"' <<<"$sorted")
         cur_s=$(jq -r --arg n "$out" '.[] | select(.name == $n) | .scale // 1' <<<"$sorted")
+        [[ "$cur_s" == "-1" ]] && cur_s=1
         label=$(display_label "$out" "$sorted")
+        out_active=active
+        if ! output_is_active "$out" "$sorted"; then
+            out_active="disabled (will enable)"
+        fi
 
-        printf '\n%s\n' "── Output: $out ($label) ──" >&2
+        printf '\n%s\n' "── Output: $out ($label) [$out_active] ──" >&2
         read_tty "  Orientation [normal|90|180|270|flipped|…] (Enter = $cur_t): " t_in
         t_in="${t_in:-$cur_t}"
         if ! valid_transform "$t_in"; then
@@ -184,13 +267,23 @@ main() {
 
     info "Applying mode, transform, and scale…"
     local o mode_str
+    for o in "${DISABLED_NAMES[@]}"; do
+        swaymsg "output $o disable" >/dev/null 2>&1 || warn "disable failed for $o"
+    done
     for o in "${ORDERED_NAMES[@]}"; do
-        mode_str=$(jq -r --arg n "$o" '
-            .[] | select(.name == $n) | .current_mode
-            | if . == null then empty else "\(.width)x\(.height)" end
-        ' <<<"$sorted")
-        if [[ -n "$mode_str" && "$mode_str" != "null" ]]; then
+        if ! output_is_active "$o" "$sorted"; then
+            swaymsg "output $o enable" >/dev/null 2>&1 || warn "enable failed for $o"
+        fi
+        mode_str=$(pick_output_mode "$o" "$sorted")
+        if [[ -z "$mode_str" ]]; then
+            sleep 0.2
+            after_enable="$(swaymsg -t get_outputs -r)"
+            mode_str=$(pick_output_mode "$o" "$after_enable")
+        fi
+        if [[ -n "$mode_str" ]]; then
             swaymsg "output $o mode $mode_str" >/dev/null 2>&1 || warn "mode not applied for $o (may already match)"
+        else
+            warn "No mode found for $o; skipping mode (set manually if needed)"
         fi
         swaymsg "output $o transform ${TRANSFORM_OF[$o]}" >/dev/null 2>&1 || warn "transform failed for $o"
         swaymsg "output $o scale ${SCALE_OF[$o]}" >/dev/null 2>&1 || warn "scale failed for $o"
@@ -255,13 +348,16 @@ main() {
         {
             printf '%s\n' "# Generated by dotfiles/scripts/setup/monitors.sh at $ts"
             printf '%s\n' "# Repo: $ROOT"
+            for o in "${DISABLED_NAMES[@]}"; do
+                printf 'output "%s" disable\n' "$o"
+            done
             x=0
             for o in "${ORDERED_NAMES[@]}"; do
-                mode_str=$(jq -r --arg n "$o" '
-                    .[] | select(.name == $n) | .current_mode
-                    | if . == null then empty else "\(.width)x\(.height)" end
-                ' <<<"$after")
-                if [[ -n "$mode_str" && "$mode_str" != "null" ]]; then
+                mode_str=$(pick_output_mode "$o" "$after")
+                if [[ -z "$mode_str" ]]; then
+                    mode_str=$(pick_output_mode "$o" "$sorted")
+                fi
+                if [[ -n "$mode_str" ]]; then
                     printf 'output "%s" mode %s\n' "$o" "$mode_str"
                 fi
                 printf 'output "%s" transform %s\n' "$o" "${TRANSFORM_OF[$o]}"
