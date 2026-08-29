@@ -373,7 +373,9 @@ main() {
                         printf '\n# Workspace to output mapping\n'
                         has_workspace_map=1
                     fi
-                    printf 'workspace number %s output %s\n' "$ws" "$o"
+                    # `workspace <name> output` treats everything before `output` as
+                    # the name. `workspace number 1 output X` creates "number 1".
+                    printf 'workspace %s output %s\n' "$ws" "$o"
                 done
             done
         } >"$cfgfile"
