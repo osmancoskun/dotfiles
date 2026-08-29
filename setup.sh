@@ -100,8 +100,8 @@ print_setup_usage() {
         "  repo-install      Non-interactive (set REPO_APPS=git,jq,...)" \
         "  desktop | apps | 3   Third-party apps; vendor .repo/.list added per selection" \
         "  apps-install      Non-interactive desktop apps (set DESKTOP_APPS=chrome,...)" \
-        "  dotfiles | 4      Oh My Zsh + chsh (same as menu 4)" \
-        "  dotfiles-install  Non-interactive (set DOTFILES_APPS=omz,chsh)" \
+        "  dotfiles | 4      zsh, chsh, Oh My Zsh, shell configs (same as menu 4)" \
+        "  dotfiles-install  Non-interactive (set DOTFILES_APPS=zsh,chsh,omz,config)" \
         "  monitors | 5      Sway monitor helper (same as menu 5; needs sway)" \
         "  wallpaper | 6     Interactive daily wallpaper setup (Bing/NASA/Wiki)" \
         "  waybar | 7        Link ~/.config/waybar from dotfiles (same as menu 7; needs sway)" \
@@ -109,7 +109,7 @@ print_setup_usage() {
         "  -h | --help       Show this help" "" \
         "REPO_APPS keys: git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm" \
         "DESKTOP_APPS keys: chrome, vscode, warp, cloudflared, cursor, discord" \
-        "DOTFILES_APPS keys: omz, chsh"
+        "DOTFILES_APPS keys: zsh, chsh, omz, config"
 }
 
 # Main execution
@@ -175,7 +175,7 @@ main() {
             ;;
         dotfiles-install)
             if [[ -z "${DOTFILES_APPS:-}" ]]; then
-                print_error "Set DOTFILES_APPS (comma-separated: omz,chsh). See: ${0##*/} --help"
+                print_error "Set DOTFILES_APPS (comma-separated: zsh,chsh,omz,config). See: ${0##*/} --help"
                 exit 1
             fi
             if ! dotfiles_step_set_want_from_csv "$DOTFILES_APPS"; then

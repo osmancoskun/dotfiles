@@ -37,7 +37,7 @@ tui_shell_main_menu() {
         printf '%s\n' '  1) Update system'
         printf '%s\n' '  2) Repository packages (git, nc, net-tools, jq, Node.js, yarn, pnpm, …)'
         printf '%s\n' '  3) Third-party applications — vendor repos added only for apps you pick'
-        printf '%s\n' '  4) Dotfiles & shell (Oh My Zsh, chsh to zsh)'
+        printf '%s\n' '  4) Dotfiles & shell (zsh, chsh, Oh My Zsh, configs)'
         if (( sway_ok )); then
             printf '%s\n' '  5) Monitors — Sway (layout / outputs)'
         else
