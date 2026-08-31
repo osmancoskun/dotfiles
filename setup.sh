@@ -107,7 +107,7 @@ print_setup_usage() {
         "  waybar | 7        Link ~/.config/waybar from dotfiles (same as menu 7; needs sway)" \
         "  wallpaper-install Same as running scripts/setup/wallpaper.sh" \
         "  -h | --help       Show this help" "" \
-        "REPO_APPS keys: git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code" \
+        "REPO_APPS keys: git, openssh, ssh-askpass, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code" \
         "DESKTOP_APPS keys: chrome, vscode, warp, cloudflared, cursor, discord" \
         "DOTFILES_APPS keys: zsh, chsh, omz, config"
 }

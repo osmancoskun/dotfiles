@@ -129,7 +129,7 @@ Valid keys (also listed by `./setup.sh -h`):
 
 | Step              | Keys                                                                                                              |
 |-------------------|-------------------------------------------------------------------------------------------------------------------|
-| `REPO_APPS`       | `git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code`   |
+| `REPO_APPS`       | `git, openssh, ssh-askpass, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code`   |
 | `DESKTOP_APPS`    | `chrome, vscode, warp, cloudflared, cursor, discord`                                                              |
 | `DOTFILES_APPS`   | `zsh, chsh, omz, config`                                                                                          |
 

@@ -9,13 +9,14 @@ declare -ga REPO_LABELS=()
 
 # Populate REPO_ORDER and REPO_PKGMAP. Call after init_app_dict.
 init_repo_package_map() {
-    REPO_ORDER=(git openssh nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code)
+    REPO_ORDER=(git openssh ssh-askpass nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code)
     REPO_PKGMAP=()
     REPO_LABELS=()
     case $DISTRO in
         fedora)
             REPO_PKGMAP[git]=git
             REPO_PKGMAP[openssh]=openssh-clients
+            REPO_PKGMAP[ssh-askpass]=openssh-askpass
             REPO_PKGMAP[nc]=nmap-ncat
             REPO_PKGMAP[nettools]="net-tools iproute"
             REPO_PKGMAP[jq]=jq
@@ -36,6 +37,7 @@ init_repo_package_map() {
         debian)
             REPO_PKGMAP[git]=git
             REPO_PKGMAP[openssh]=openssh-client
+            REPO_PKGMAP[ssh-askpass]=ssh-askpass-gnome
             REPO_PKGMAP[nc]=netcat-openbsd
             REPO_PKGMAP[nettools]="net-tools iproute2"
             REPO_PKGMAP[jq]=jq
@@ -55,6 +57,7 @@ init_repo_package_map() {
         arch)
             REPO_PKGMAP[git]=git
             REPO_PKGMAP[openssh]=openssh
+            REPO_PKGMAP[ssh-askpass]=openssh-askpass
             REPO_PKGMAP[nc]=openbsd-netcat
             REPO_PKGMAP[nettools]="net-tools iproute2"
             REPO_PKGMAP[jq]=jq
@@ -78,6 +81,7 @@ init_repo_package_map() {
     REPO_LABELS=(
         "Git"
         "OpenSSH client (ssh, scp)"
+        "ssh-askpass (SSH key passphrase dialog)"
         "netcat (nc)"
         "Networking CLI (net-tools, iproute)"
         "jq"
@@ -173,6 +177,12 @@ _repo_verify_nettools() {
     command -v ip &>/dev/null || command -v ifconfig &>/dev/null
 }
 
+_repo_verify_ssh_askpass() {
+    command -v ssh-askpass &>/dev/null \
+        || [[ -x /usr/libexec/openssh/ssh-askpass ]] \
+        || [[ -x /usr/libexec/openssh/gnome-ssh-askpass ]]
+}
+
 _repo_verify_cascadia_code() {
     fc-match -f '%{family}' 'Cascadia Code' 2>/dev/null | grep -qi cascadia
 }
@@ -194,6 +204,14 @@ repo_packages_verify_selected() {
             print_success "Verify: OpenSSH client OK"
         else
             print_error "Verify: ssh missing."
+            bad=1
+        fi
+    fi
+    if [[ "${REPO_WANT[ssh-askpass]:-}" == "1" ]]; then
+        if _repo_verify_ssh_askpass; then
+            print_success "Verify: ssh-askpass OK"
+        else
+            print_error "Verify: ssh-askpass missing."
             bad=1
         fi
     fi
