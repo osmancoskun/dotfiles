@@ -9,7 +9,7 @@ declare -ga REPO_LABELS=()
 
 # Populate REPO_ORDER and REPO_PKGMAP. Call after init_app_dict.
 init_repo_package_map() {
-    REPO_ORDER=(git openssh nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm)
+    REPO_ORDER=(git openssh nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code)
     REPO_PKGMAP=()
     REPO_LABELS=()
     case $DISTRO in
@@ -31,6 +31,7 @@ init_repo_package_map() {
             REPO_PKGMAP[nodejs]="${APP_DICT[nodejs]}"
             REPO_PKGMAP[yarn]="${APP_DICT[yarn]}"
             REPO_PKGMAP[pnpm]="${APP_DICT[pnpm]}"
+            REPO_PKGMAP[cascadia-code]=cascadia-code-fonts
             ;;
         debian)
             REPO_PKGMAP[git]=git
@@ -92,6 +93,7 @@ init_repo_package_map() {
         "Node.js + npm (distro packages)"
         "Yarn (distro package)"
         "pnpm (distro package)"
+        "Cascadia Code (terminal / coding font)"
     )
     if ((${#REPO_ORDER[@]} != ${#REPO_LABELS[@]})); then
         print_error "repo-packages: REPO_ORDER / REPO_LABELS length mismatch (internal bug)."
@@ -169,6 +171,10 @@ _repo_verify_fd() {
 
 _repo_verify_nettools() {
     command -v ip &>/dev/null || command -v ifconfig &>/dev/null
+}
+
+_repo_verify_cascadia_code() {
+    fc-match -f '%{family}' 'Cascadia Code' 2>/dev/null | grep -qi cascadia
 }
 
 repo_packages_verify_selected() {
@@ -308,6 +314,14 @@ repo_packages_verify_selected() {
             print_success "Verify: pnpm OK"
         else
             print_error "Verify: pnpm missing."
+            bad=1
+        fi
+    fi
+    if [[ "${REPO_WANT[cascadia-code]:-}" == "1" ]]; then
+        if _repo_verify_cascadia_code; then
+            print_success "Verify: Cascadia Code font OK"
+        else
+            print_error "Verify: Cascadia Code font missing (install cascadia-code-fonts)."
             bad=1
         fi
     fi

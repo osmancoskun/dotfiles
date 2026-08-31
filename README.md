@@ -13,6 +13,16 @@ Tested on **Fedora**, **Debian/Ubuntu**, and **Arch Linux**.
 
 ## TL;DR
 
+**Fresh machine (install deps + clone + optional setup menu):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/osmancoskun/dotfiles/main/install.sh | bash
+# or jump straight into the setup menu:
+curl -fsSL https://raw.githubusercontent.com/osmancoskun/dotfiles/main/install.sh | bash -s -- --run-setup
+```
+
+**Manual (configs only):**
+
 ```bash
 sudo dnf install -y git stow         # or: apt-get / pacman
 git clone https://github.com/osmancoskun/dotfiles.git ~/.dotfiles
@@ -41,6 +51,7 @@ Want the full bootstrap (packages, browsers, Node, Oh My Zsh, …)?
 │       ├── sway/               # window manager + wallpaper-daily, monitor layout
 │       └── waybar/             # bar + custom disk / network modules
 ├── setup.sh                    # interactive bootstrap (single entry point)
+├── install.sh                  # curl-able bootstrap (deps + clone dotfiles)
 ├── lib/                        # shell modules sourced by setup.sh
 ├── tui/menu.sh                 # text menu rendered by setup.sh
 ├── scripts/setup/              # standalone helpers (wallpaper, monitors, waybar, shell-config)
@@ -118,7 +129,7 @@ Valid keys (also listed by `./setup.sh -h`):
 
 | Step              | Keys                                                                                                              |
 |-------------------|-------------------------------------------------------------------------------------------------------------------|
-| `REPO_APPS`       | `git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm`   |
+| `REPO_APPS`       | `git, openssh, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code`   |
 | `DESKTOP_APPS`    | `chrome, vscode, warp, cloudflared, cursor, discord`                                                              |
 | `DOTFILES_APPS`   | `zsh, chsh, omz, config`                                                                                          |
 
@@ -134,7 +145,7 @@ Logs go to **`~/setup.log`**.
 
 Default terminal for Sway (`set $term foot`). **Cascadia Code** at **14pt**. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
 
-Install on Fedora: `sudo dnf install foot cascadia-code-fonts`
+Install on Fedora: `sudo dnf install foot` and pick **Cascadia Code** in menu **2** (repository packages), or `REPO_APPS=cascadia-code ./setup.sh repo-install`.
 
 ### Zsh — `home/.zshrc`
 
