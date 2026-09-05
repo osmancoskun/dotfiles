@@ -129,8 +129,8 @@ Valid keys (also listed by `./setup.sh -h`):
 
 | Step              | Keys                                                                                                              |
 |-------------------|-------------------------------------------------------------------------------------------------------------------|
-| `REPO_APPS`       | `git, openssh, ssh-askpass, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code, noto-sans-mono`   |
-| `DESKTOP_APPS`    | `chrome, vscode, warp, cloudflared, cursor, discord`                                                              |
+| `REPO_APPS`       | `git, openssh, ssh-askpass, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code, noto-sans-mono, virt-manager`   |
+| `DESKTOP_APPS`    | `chrome, vscode, warp, cloudflared, cursor, discord, docker`                                                      |
 | `DOTFILES_APPS`   | `zsh, chsh, omz, config`                                                                                          |
 
 Logs go to **`~/setup.log`**.
@@ -146,6 +146,10 @@ Logs go to **`~/setup.log`**.
 Default terminal for Sway (`set $term foot`). **Cascadia Code** at **18**, `dpi-aware=no` (Sway already scales outputs), **Noto Sans Mono** as glyph fallback. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
 
 Install `foot` from the distro, then pick **Cascadia Code** and **Noto Sans Mono** in menu **2** (or `REPO_APPS=cascadia-code,noto-sans-mono ./setup.sh repo-install`). Distro packages: Fedora `cascadia-code-fonts` + `google-noto-sans-mono-vf-fonts`; Debian `fonts-cascadia-code` + `fonts-noto-mono`; Arch `ttf-cascadia-code` + `noto-fonts`. SSH key passphrase dialog: `ssh-askpass` (`openssh-askpass` / `ssh-askpass-gnome` / `x11-ssh-askpass`).
+
+Menu **2** key `virt-manager` installs QEMU/KVM + libvirt from distro repos, adds your user to `libvirt` / `kvm`, enables the matching units (Fedora modular `virtqemud` / `virtnetworkd` / `virtstoraged`, otherwise `libvirtd`), and autostarts libvirt’s `default` NAT network.
+
+Menu **3** key `docker` adds Docker’s official CE repo and key, then installs `docker-ce` + `docker-compose-plugin` (and buildx). After install it adds your user to the `docker` group and `systemctl enable --now docker`. Log out and back in so group membership applies.
 
 ### Zsh — `home/.zshrc`
 

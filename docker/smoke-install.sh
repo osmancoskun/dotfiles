@@ -3,7 +3,7 @@
 # Usage:
 #   docker run --rm -v "$PWD:/dotfiles:ro" -e ROOT=/dotfiles \
 #     -e SMOKE_APPS=cloudflared dotfiles-smoke:fedora /usr/local/bin/smoke-install.sh
-# SMOKE_APPS: comma-separated chrome,vscode,warp,cloudflared,cursor,discord
+# SMOKE_APPS: comma-separated chrome,vscode,warp,cloudflared,cursor,discord,docker
 # Default: cloudflared (small; Fedora repo).
 
 set -euo pipefail
@@ -54,7 +54,7 @@ if ! desktop_apps_set_want_from_csv "$SMOKE_APPS"; then
     echo "== smoke-install: nothing valid in SMOKE_APPS; exit 1 ==" >&2
     exit 1
 fi
-for k in chrome vscode warp cloudflared cursor discord; do
+for k in chrome vscode warp cloudflared cursor discord docker; do
     [[ "${DESKTOP_WANT[$k]:-}" == "1" ]] && echo "   + $k"
 done
 

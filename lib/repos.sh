@@ -137,6 +137,74 @@ EOF
     return 0
 }
 
+# Docker CE official repo + GPG key (not distro moby/docker.io). Idempotent.
+setup_docker_ce_repo() {
+    case $DISTRO in
+        fedora)
+            print_info "Removing distro Docker packages that conflict with Docker CE..."
+            sudo dnf remove -y docker docker-client docker-client-latest docker-common \
+                docker-latest docker-latest-logrotate docker-logrotate docker-selinux \
+                docker-engine-selinux docker-engine moby-engine docker-cli docker-compose \
+                >/dev/null 2>&1 || true
+            if [[ ! -f /etc/yum.repos.d/docker-ce.repo ]]; then
+                print_info "Adding Docker CE yum repo (download.docker.com)..."
+                if ! sudo dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo; then
+                    sudo tee /etc/yum.repos.d/docker-ce.repo >/dev/null <<'EOF'
+[docker-ce-stable]
+name=Docker CE Stable - $basearch
+baseurl=https://download.docker.com/linux/fedora/$releasever/$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://download.docker.com/linux/fedora/gpg
+EOF
+                fi
+            fi
+            sudo rpm --import https://download.docker.com/linux/fedora/gpg || true
+            sudo dnf makecache -y || true
+            ;;
+        debian)
+            # shellcheck source=/dev/null
+            . /etc/os-release
+            local docker_distro docker_codename
+            case "${ID}" in
+                ubuntu | linuxmint)
+                    docker_distro=ubuntu
+                    docker_codename="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
+                    ;;
+                *)
+                    docker_distro=debian
+                    docker_codename="${VERSION_CODENAME:-}"
+                    ;;
+            esac
+            if [[ -z "$docker_codename" ]]; then
+                print_error "Could not determine Debian/Ubuntu codename for Docker CE repo."
+                return 1
+            fi
+            print_info "Removing distro Docker packages that conflict with Docker CE..."
+            sudo apt-get remove -y docker.io docker-doc docker-compose docker-compose-v2 \
+                podman-docker containerd runc >/dev/null 2>&1 || true
+            if [[ ! -f /etc/apt/sources.list.d/docker.list ]]; then
+                print_info "Adding Docker CE APT repo (${docker_distro} ${docker_codename})..."
+                sudo apt-get install -y ca-certificates curl
+                sudo install -m 0755 -d /etc/apt/keyrings
+                sudo curl -fsSL "https://download.docker.com/linux/${docker_distro}/gpg" -o /etc/apt/keyrings/docker.asc
+                sudo chmod a+r /etc/apt/keyrings/docker.asc
+                local arch
+                arch="$(dpkg --print-architecture)"
+                echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${docker_distro} ${docker_codename} stable" \
+                    | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+            fi
+            sudo apt-get update -y || true
+            ;;
+        arch)
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+    return 0
+}
+
 # RPM Fusion nonfree (Discord RPM on Fedora). Idempotent.
 setup_rpmfusion_nonfree_fedora() {
     [[ "$DISTRO" == "fedora" ]] || return 0

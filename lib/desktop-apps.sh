@@ -1,9 +1,9 @@
-# Third-party / vendor installers (not distro default repos): Chrome, VS Code, WARP, cloudflared, Cursor, Discord.
+# Third-party / vendor installers (not distro default repos): Chrome, VS Code, WARP, cloudflared, Cursor, Discord, Docker CE.
 # Vendor .repo / apt sources are added here only when an app needs them — no separate “enable all repos” step.
-# For git, nc, Node from mirrors use repo-packages.sh (menu step 2).
+# For git, nc, Node, virt-manager from mirrors use repo-packages.sh (menu step 2).
 # Expects: DISTRO, APP_DICT, print_*, install_package, numbered_prompt_apply_line_to_want, tui_read_with_back, TUI_BACK_TO_MAIN,
 #          setup_third_party_repos,
-#          setup_cloudflare_warp_repo, setup_cursor_repo, setup_rpmfusion_nonfree_fedora.
+#          setup_cloudflare_warp_repo, setup_cursor_repo, setup_docker_ce_repo, setup_rpmfusion_nonfree_fedora.
 
 declare -gA DESKTOP_WANT=()
 
@@ -19,7 +19,7 @@ desktop_apps_set_want_from_csv() {
         _p="${_p//[$'\t\r\n ']/}"
         [[ -z "$_p" ]] && continue
         case "$_p" in
-            chrome | vscode | warp | cloudflared | cursor | discord)
+            chrome | vscode | warp | cloudflared | cursor | discord | docker)
                 DESKTOP_WANT["$_p"]=1
                 ;;
             *)
@@ -28,7 +28,7 @@ desktop_apps_set_want_from_csv() {
         esac
     done
     local any=0
-    for k in chrome vscode warp cloudflared cursor discord; do
+    for k in chrome vscode warp cloudflared cursor discord docker; do
         [[ "${DESKTOP_WANT[$k]:-}" == "1" ]] && any=1
     done
     (( any )) || return 1
@@ -44,7 +44,7 @@ desktop_apps_prompt_selection() {
     print_header "SELECT APPLICATIONS"
     print_info "Native / .rpm / .deb / AUR only — Flatpak is not used."
 
-    local keys=(chrome vscode warp cloudflared cursor discord)
+    local keys=(chrome vscode warp cloudflared cursor discord docker)
     local labels=(
         "Google Chrome (stable)"
         "Visual Studio Code"
@@ -52,6 +52,7 @@ desktop_apps_prompt_selection() {
         "cloudflared"
         "Cursor"
         "Discord"
+        "Docker CE + Compose (official repo)"
     )
     local max=${#keys[@]}
     local i
@@ -69,7 +70,7 @@ desktop_apps_prompt_selection() {
     numbered_prompt_apply_line_to_want "$line" "$max" DESKTOP_WANT "${keys[@]}"
 
     local any=0
-    for k in chrome vscode warp cloudflared cursor discord; do
+    for k in chrome vscode warp cloudflared cursor discord docker; do
         [[ "${DESKTOP_WANT[$k]:-}" == "1" ]] && any=1
     done
     if (( any == 0 )); then
@@ -193,6 +194,63 @@ _desktop_install_cursor() {
     esac
 }
 
+_desktop_install_docker() {
+    print_info "Installing Docker CE + Compose plugin..."
+    case $DISTRO in
+        fedora)
+            if _desktop_in_container; then
+                print_info "Container: installing Docker CE with tsflags=noscripts (no systemd in %post)."
+                sudo dnf install -y --setopt=tsflags=noscripts \
+                    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            else
+                sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            fi
+            ;;
+        debian)
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            ;;
+        arch)
+            install_package "docker docker-compose docker-buildx" "Docker"
+            ;;
+    esac
+}
+
+_desktop_configure_docker() {
+    print_header "CONFIGURE DOCKER"
+    local user fail=0
+    if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != root ]]; then
+        user="$SUDO_USER"
+    else
+        user="${USER:-$(id -un)}"
+    fi
+    if [[ "$user" == root ]]; then
+        print_warning "Skip docker group (target user is root)."
+    elif ! getent group docker >/dev/null; then
+        print_error "Group 'docker' does not exist."
+        fail=1
+    elif id -nG "$user" 2>/dev/null | grep -qw docker; then
+        print_warning "$user already in group docker"
+    elif sudo usermod -aG docker "$user"; then
+        print_success "Added $user to group docker (log out and back in)"
+    else
+        print_error "Failed to add $user to group docker."
+        fail=1
+    fi
+    if [[ -f /run/.containerenv || -f /.dockerenv ]] || [[ ! -d /run/systemd/system ]]; then
+        print_warning "No systemd session; skip docker.service."
+    elif ! systemctl cat docker.service &>/dev/null; then
+        print_warning "Unit docker.service not found; skip."
+    elif systemctl is-enabled --quiet docker.service && systemctl is-active --quiet docker.service; then
+        print_warning "docker.service already enabled and running"
+    elif sudo systemctl enable --now docker.service; then
+        print_success "Enabled and started docker.service"
+    else
+        print_error "Failed to enable --now docker.service."
+        fail=1
+    fi
+    return "$fail"
+}
+
 _desktop_install_discord() {
     print_info "Installing Discord..."
     case $DISTRO in
@@ -280,6 +338,12 @@ _desktop_verify_discord() {
     esac
 }
 
+_desktop_verify_docker() {
+    command -v docker &>/dev/null || return 1
+    docker compose version &>/dev/null && return 0
+    command -v docker-compose &>/dev/null
+}
+
 # Run after all installs in desktop_apps_install_selected (last step before success).
 desktop_apps_verify_selected_installs() {
     print_header "VERIFY SELECTED APPLICATIONS"
@@ -333,6 +397,14 @@ desktop_apps_verify_selected_installs() {
             bad=1
         fi
     fi
+    if [[ "${DESKTOP_WANT[docker]:-}" == "1" ]]; then
+        if _desktop_verify_docker; then
+            print_success "Verify: Docker CE + Compose OK"
+        else
+            print_error "Verify: docker or compose plugin not found."
+            bad=1
+        fi
+    fi
 
     if (( bad )); then
         return 1
@@ -365,6 +437,9 @@ desktop_apps_install_selected() {
     if [[ "$DISTRO" == "fedora" ]] && [[ "${DESKTOP_WANT[discord]:-}" == "1" ]]; then
         setup_rpmfusion_nonfree_fedora || fail=1
     fi
+    if [[ "${DESKTOP_WANT[docker]:-}" == "1" ]]; then
+        setup_docker_ce_repo || fail=1
+    fi
     if (( fail )); then
         print_error "Repository setup failed."
         return 1
@@ -376,6 +451,7 @@ desktop_apps_install_selected() {
     [[ "${DESKTOP_WANT[cloudflared]:-}" == "1" ]] && { _desktop_install_cloudflared || fail=1; }
     [[ "${DESKTOP_WANT[cursor]:-}" == "1" ]] && { _desktop_install_cursor || fail=1; }
     [[ "${DESKTOP_WANT[discord]:-}" == "1" ]] && { _desktop_install_discord || fail=1; }
+    [[ "${DESKTOP_WANT[docker]:-}" == "1" ]] && { _desktop_install_docker || fail=1; }
 
     if (( fail )); then
         print_error "One or more application installs failed."
@@ -383,6 +459,13 @@ desktop_apps_install_selected() {
     fi
     if ! desktop_apps_verify_selected_installs; then
         print_error "Post-install verification failed (selected apps not all present)."
+        return 1
+    fi
+    if [[ "${DESKTOP_WANT[docker]:-}" == "1" ]]; then
+        _desktop_configure_docker || fail=1
+    fi
+    if (( fail )); then
+        print_error "Post-install configuration failed (groups or systemd units)."
         return 1
     fi
     print_success "Selected application installs finished."
