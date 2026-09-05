@@ -9,7 +9,7 @@ declare -ga REPO_LABELS=()
 
 # Populate REPO_ORDER and REPO_PKGMAP. Call after init_app_dict.
 init_repo_package_map() {
-    REPO_ORDER=(git openssh ssh-askpass nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code)
+    REPO_ORDER=(git openssh ssh-askpass nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code noto-sans-mono)
     REPO_PKGMAP=()
     REPO_LABELS=()
     case $DISTRO in
@@ -33,6 +33,7 @@ init_repo_package_map() {
             REPO_PKGMAP[yarn]="${APP_DICT[yarn]}"
             REPO_PKGMAP[pnpm]="${APP_DICT[pnpm]}"
             REPO_PKGMAP[cascadia-code]=cascadia-code-fonts
+            REPO_PKGMAP[noto-sans-mono]=google-noto-sans-mono-vf-fonts
             ;;
         debian)
             REPO_PKGMAP[git]=git
@@ -53,11 +54,13 @@ init_repo_package_map() {
             REPO_PKGMAP[nodejs]="${APP_DICT[nodejs]}"
             REPO_PKGMAP[yarn]="${APP_DICT[yarn]}"
             REPO_PKGMAP[pnpm]="${APP_DICT[pnpm]}"
+            REPO_PKGMAP[cascadia-code]=fonts-cascadia-code
+            REPO_PKGMAP[noto-sans-mono]=fonts-noto-mono
             ;;
         arch)
             REPO_PKGMAP[git]=git
             REPO_PKGMAP[openssh]=openssh
-            REPO_PKGMAP[ssh-askpass]=openssh-askpass
+            REPO_PKGMAP[ssh-askpass]=x11-ssh-askpass
             REPO_PKGMAP[nc]=openbsd-netcat
             REPO_PKGMAP[nettools]="net-tools iproute2"
             REPO_PKGMAP[jq]=jq
@@ -73,6 +76,8 @@ init_repo_package_map() {
             REPO_PKGMAP[nodejs]="${APP_DICT[nodejs]}"
             REPO_PKGMAP[yarn]="${APP_DICT[yarn]}"
             REPO_PKGMAP[pnpm]="${APP_DICT[pnpm]}"
+            REPO_PKGMAP[cascadia-code]=ttf-cascadia-code
+            REPO_PKGMAP[noto-sans-mono]=noto-fonts
             ;;
         *)
             return 1
@@ -98,6 +103,7 @@ init_repo_package_map() {
         "Yarn (distro package)"
         "pnpm (distro package)"
         "Cascadia Code (terminal / coding font)"
+        "Noto Sans Mono (terminal fallback font)"
     )
     if ((${#REPO_ORDER[@]} != ${#REPO_LABELS[@]})); then
         print_error "repo-packages: REPO_ORDER / REPO_LABELS length mismatch (internal bug)."
@@ -180,11 +186,16 @@ _repo_verify_nettools() {
 _repo_verify_ssh_askpass() {
     command -v ssh-askpass &>/dev/null \
         || [[ -x /usr/libexec/openssh/ssh-askpass ]] \
-        || [[ -x /usr/libexec/openssh/gnome-ssh-askpass ]]
+        || [[ -x /usr/libexec/openssh/gnome-ssh-askpass ]] \
+        || [[ -x /usr/lib/ssh/x11-ssh-askpass ]]
 }
 
 _repo_verify_cascadia_code() {
     fc-match -f '%{family}' 'Cascadia Code' 2>/dev/null | grep -qi cascadia
+}
+
+_repo_verify_noto_sans_mono() {
+    fc-match -f '%{family}' 'Noto Sans Mono' 2>/dev/null | grep -qi 'noto sans mono'
 }
 
 repo_packages_verify_selected() {
@@ -339,7 +350,15 @@ repo_packages_verify_selected() {
         if _repo_verify_cascadia_code; then
             print_success "Verify: Cascadia Code font OK"
         else
-            print_error "Verify: Cascadia Code font missing (install cascadia-code-fonts)."
+            print_error "Verify: Cascadia Code font missing (install ${REPO_PKGMAP[cascadia-code]:-cascadia-code})."
+            bad=1
+        fi
+    fi
+    if [[ "${REPO_WANT[noto-sans-mono]:-}" == "1" ]]; then
+        if _repo_verify_noto_sans_mono; then
+            print_success "Verify: Noto Sans Mono font OK"
+        else
+            print_error "Verify: Noto Sans Mono font missing (install ${REPO_PKGMAP[noto-sans-mono]:-noto-sans-mono})."
             bad=1
         fi
     fi

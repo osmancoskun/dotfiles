@@ -149,7 +149,7 @@ Done. Next steps:
   ./setup.sh --help       # non-interactive env vars
 
 Quick install (repo packages + shell configs):
-  REPO_APPS=git,jq,cascadia-code DOTFILES_APPS=zsh,chsh,omz,config ./setup.sh repo-install
+  REPO_APPS=git,jq,ssh-askpass,cascadia-code,noto-sans-mono DOTFILES_APPS=zsh,chsh,omz,config ./setup.sh repo-install
   DOTFILES_APPS=zsh,chsh,omz,config ./setup.sh dotfiles-install
 EOF
 }

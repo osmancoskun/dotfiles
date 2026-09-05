@@ -129,7 +129,7 @@ Valid keys (also listed by `./setup.sh -h`):
 
 | Step              | Keys                                                                                                              |
 |-------------------|-------------------------------------------------------------------------------------------------------------------|
-| `REPO_APPS`       | `git, openssh, ssh-askpass, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code`   |
+| `REPO_APPS`       | `git, openssh, ssh-askpass, nc, nettools, jq, htop, ripgrep, fd, bat, zip, tree, build, dnsutils, python, nodejs, yarn, pnpm, cascadia-code, noto-sans-mono`   |
 | `DESKTOP_APPS`    | `chrome, vscode, warp, cloudflared, cursor, discord`                                                              |
 | `DOTFILES_APPS`   | `zsh, chsh, omz, config`                                                                                          |
 
@@ -143,9 +143,9 @@ Logs go to **`~/setup.log`**.
 
 ### Foot — `home/.config/foot/foot.ini`
 
-Default terminal for Sway (`set $term foot`). **Cascadia Code** at **14pt**. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
+Default terminal for Sway (`set $term foot`). **Cascadia Code** at **18**, `dpi-aware=no` (Sway already scales outputs), **Noto Sans Mono** as glyph fallback. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
 
-Install on Fedora: `sudo dnf install foot` and pick **Cascadia Code** in menu **2** (repository packages), or `REPO_APPS=cascadia-code ./setup.sh repo-install`.
+Install `foot` from the distro, then pick **Cascadia Code** and **Noto Sans Mono** in menu **2** (or `REPO_APPS=cascadia-code,noto-sans-mono ./setup.sh repo-install`). Distro packages: Fedora `cascadia-code-fonts` + `google-noto-sans-mono-vf-fonts`; Debian `fonts-cascadia-code` + `fonts-noto-mono`; Arch `ttf-cascadia-code` + `noto-fonts`. SSH key passphrase dialog: `ssh-askpass` (`openssh-askpass` / `ssh-askpass-gnome` / `x11-ssh-askpass`).
 
 ### Zsh — `home/.zshrc`
 
