@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Link shell-related dotfiles (~/.zshrc, ~/.config/foot) from the repo.
+# Link shell-related dotfiles (~/.zshrc, ~/.config/foot, ~/.cursor) from the repo.
 
 set -euo pipefail
 
@@ -82,6 +82,8 @@ main() {
 
     _link_path "$ROOT/home/.zshrc" "$HOME/.zshrc" ".zshrc" || fail=1
     _link_path "$ROOT/home/.config/foot/foot.ini" "$cfg_root/foot/foot.ini" "foot.ini" || fail=1
+    _link_path "$ROOT/home/.cursor/cli-config.json" "$HOME/.cursor/cli-config.json" "cli-config.json" || fail=1
+    _link_path "$ROOT/home/.cursor/rules/no-commit-trailers.mdc" "$HOME/.cursor/rules/no-commit-trailers.mdc" "no-commit-trailers.mdc" || fail=1
 
     exit "$fail"
 }

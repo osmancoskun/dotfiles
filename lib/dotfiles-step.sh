@@ -41,7 +41,7 @@ dotfiles_step_prompt_selection() {
         "Install zsh (from distro repos if missing)"
         "Set default login shell to zsh (chsh)"
         "Oh My Zsh + plugins (autosuggestions, syntax-highlighting, history-substring)"
-        "Link shell configs (~/.zshrc, ~/.config/foot/foot.ini)"
+        "Link shell configs (~/.zshrc, ~/.config/foot/foot.ini, ~/.cursor)"
     )
     local max=${#keys[@]}
     local i

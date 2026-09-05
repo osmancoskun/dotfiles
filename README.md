@@ -45,6 +45,7 @@ Want the full bootstrap (packages, browsers, Node, Oh My Zsh, …)?
 ├── home/                       # stow package — symlinked into $HOME
 │   ├── .zshrc                  # Oh My Zsh + plugins
 │   ├── .vimrc
+│   ├── .cursor/                # Cursor CLI attribution + user rules
 │   └── .config/
 │       ├── foot/               # terminal (Sway default)
 │       ├── alacritty/          # alternate terminal
@@ -146,6 +147,10 @@ Logs go to **`~/setup.log`**.
 Default terminal for Sway (`set $term foot`). **Cascadia Code** at **18**, `dpi-aware=no` (Sway already scales outputs), **Noto Sans Mono** as glyph fallback. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
 
 Install `foot` from the distro, then pick **Cascadia Code** and **Noto Sans Mono** in menu **2** (or `REPO_APPS=cascadia-code,noto-sans-mono ./setup.sh repo-install`). Distro packages: Fedora `cascadia-code-fonts` + `google-noto-sans-mono-vf-fonts`; Debian `fonts-cascadia-code` + `fonts-noto-mono`; Arch `ttf-cascadia-code` + `noto-fonts`. SSH key passphrase dialog: `ssh-askpass` (`openssh-askpass` / `ssh-askpass-gnome` / `x11-ssh-askpass`).
+
+### Cursor — `home/.cursor/`
+
+CLI attribution off (`cli-config.json`: `attributeCommitsToAgent` / `attributePRsToAgent` false) so Agent commits do not get `Co-authored-by: Cursor`. User rule `rules/no-commit-trailers.mdc` repeats that for chat. Also turn off **Cursor Settings → Git & PRs → Attribution** in the UI (not stored in this file). Link via menu **4** *config* or `stow --restow --target="$HOME" home`.
 
 Menu **2** key `virt-manager` installs QEMU/KVM + libvirt from distro repos, adds your user to `libvirt` / `kvm`, enables the matching units (Fedora modular `virtqemud` / `virtnetworkd` / `virtstoraged`, otherwise `libvirtd`), and autostarts libvirt’s `default` NAT network.
 

@@ -1,0 +1,8 @@
+---
+description: Never add Cursor or Co-authored-by git trailers
+alwaysApply: true
+---
+
+# No git commit trailers
+
+Do not add `Co-authored-by`, `Made-with`, or any other git trailer to commits or pull requests. Do not pass `git commit --trailer`. Commit messages are subject and body only.
