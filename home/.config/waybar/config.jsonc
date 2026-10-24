@@ -20,6 +20,7 @@
         "clock#date",
         "pulseaudio",
         "idle_inhibitor",
+        "battery",
         "power-profiles-daemon",
         "tray"
     ],
@@ -118,6 +119,21 @@
         },
         "on-click": "pavucontrol",
         "tooltip-format": "{desc}"
+    },
+    "battery": {
+        "interval": 30,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "format": "{icon} {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-full": "{icon} {capacity}%",
+        "format-time": "{H}:{m}",
+        "format-alt": "{icon} {time}",
+        "format-icons": ["", "", "", "", ""],
+        "tooltip-format": "{capacity}% · {time}\n{power} W"
     },
     "power-profiles-daemon": {
         "format": "{icon}",
