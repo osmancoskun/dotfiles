@@ -1,0 +1,13 @@
+---
+description: Never commit or push unless the user explicitly asks
+alwaysApply: true
+---
+
+# No commit or push without an explicit request
+
+This rule applies in every session.
+
+- Do not run `git commit` unless the user explicitly asks for a commit in that message.
+- Do not run `git push`, including a normal push, `--force`, or `--force-with-lease`, unless the user explicitly asks for a push in that message.
+- Do not treat "fix it", "ship it", "save it", or finishing a task as permission to commit or push.
+- Leave changes in the working tree until the user asks.

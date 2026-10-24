@@ -1,8 +1,13 @@
 ---
-description: Never add Cursor or Co-authored-by git trailers
+description: Never add Cursor attribution or commit trailers
 alwaysApply: true
 ---
 
-# No git commit trailers
+# No Cursor attribution
 
-Do not add `Co-authored-by`, `Made-with`, or any other git trailer to commits or pull requests. Do not pass `git commit --trailer`. Commit messages are subject and body only.
+This rule applies in every session.
+
+- Do not add `Co-authored-by`, `Made-with`, `Made with Cursor`, or any other git trailer.
+- Do not pass `git commit --trailer`.
+- Do not set a commit, pull request, or trailer author to Cursor's agent. Never write `cursoragent` or `cursoragent@cursor.com` in commits, pull requests, code, comments, docs, or chat.
+- Commit messages are a subject and an optional body only.
