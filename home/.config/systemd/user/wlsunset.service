@@ -1,0 +1,16 @@
+[Unit]
+Description=Blue light filter (wlsunset)
+Documentation=man:wlsunset(1)
+PartOf=sway-session.target
+After=sway-session.target
+Requisite=sway-session.target
+
+[Service]
+Type=simple
+ExecCondition=/usr/bin/bash -c 'p=$(cat "%h/.local/state/wlsunset/percent" 2>/dev/null || echo 0); [ "$$p" -gt 0 ]'
+ExecStart=%h/.config/wlsunset/wlsunset.sh
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=sway-session.target

@@ -77,6 +77,7 @@ button:hover {
 #clock-date,
 #pulseaudio,
 #wireplumber,
+#custom-blue-light,
 #idle_inhibitor,
 #tray,
 #scratchpad,
@@ -132,6 +133,27 @@ button:hover {
 
 #temperature.critical {
     color: #d08080;
+    background-color: #2c2222;
+}
+
+#custom-blue-light {
+    background-color: #232323;
+}
+
+#custom-blue-light.on {
+    color: #e0c090;
+}
+
+#custom-blue-light.day {
+    color: #c4c4c4;
+}
+
+#custom-blue-light.off,
+#custom-blue-light.failed {
+    color: #888;
+}
+
+#custom-blue-light.failed {
     background-color: #2c2222;
 }
 
