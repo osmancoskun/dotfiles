@@ -144,7 +144,7 @@ Logs go to **`~/setup.log`**.
 
 ### Foot — `home/.config/foot/foot.ini`
 
-Default terminal for Sway (`set $term foot`). **Cascadia Code** at **18**, `dpi-aware=no` (Sway already scales outputs), **Noto Sans Mono** as glyph fallback. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
+Default terminal for Sway (`set $term foot`). **Cascadia Code** at **12**, `dpi-aware=no` (Sway already scales outputs), **Noto Sans Mono** as glyph fallback. Link into place via menu **4** step *config* or `./setup.sh dotfiles-install` with `DOTFILES_APPS=...,config`.
 
 Install `foot` from the distro, then pick **Cascadia Code** and **Noto Sans Mono** in menu **2** (or `REPO_APPS=cascadia-code,noto-sans-mono ./setup.sh repo-install`). Distro packages: Fedora `cascadia-code-fonts` + `google-noto-sans-mono-vf-fonts`; Debian `fonts-cascadia-code` + `fonts-noto-mono`; Arch `ttf-cascadia-code` + `noto-fonts`. SSH key passphrase dialog: `ssh-askpass` (`openssh-askpass` / `ssh-askpass-gnome` / `x11-ssh-askpass`).
 
