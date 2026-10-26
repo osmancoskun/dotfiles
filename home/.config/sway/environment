@@ -1,0 +1,3 @@
+# Loaded by /usr/bin/start-sway for every Sway session (stock + custom).
+# Required when the proprietary NVIDIA module is loaded.
+SWAY_EXTRA_ARGS="$SWAY_EXTRA_ARGS --unsupported-gpu"
