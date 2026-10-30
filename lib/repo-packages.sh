@@ -9,7 +9,7 @@ declare -ga REPO_LABELS=()
 
 # Populate REPO_ORDER and REPO_PKGMAP. Call after init_app_dict.
 init_repo_package_map() {
-    REPO_ORDER=(git openssh ssh-askpass nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code noto-sans-mono virt-manager)
+    REPO_ORDER=(git openssh ssh-askpass nc nettools jq htop ripgrep fd bat zip tree build dnsutils python nodejs yarn pnpm cascadia-code noto-sans-mono virt-manager wlsunset)
     REPO_PKGMAP=()
     REPO_LABELS=()
     case $DISTRO in
@@ -35,6 +35,7 @@ init_repo_package_map() {
             REPO_PKGMAP[cascadia-code]=cascadia-code-fonts
             REPO_PKGMAP[noto-sans-mono]=google-noto-sans-mono-vf-fonts
             REPO_PKGMAP[virt-manager]="virt-manager virt-install virt-viewer qemu-kvm qemu-img libvirt-daemon-kvm libvirt-daemon-config-network dnsmasq edk2-ovmf"
+            REPO_PKGMAP[wlsunset]=wlsunset
             ;;
         debian)
             REPO_PKGMAP[git]=git
@@ -58,6 +59,7 @@ init_repo_package_map() {
             REPO_PKGMAP[cascadia-code]=fonts-cascadia-code
             REPO_PKGMAP[noto-sans-mono]=fonts-noto-mono
             REPO_PKGMAP[virt-manager]="virt-manager virtinst virt-viewer qemu-system-x86 qemu-utils libvirt-daemon-system libvirt-clients dnsmasq-base ovmf"
+            REPO_PKGMAP[wlsunset]=wlsunset
             ;;
         arch)
             REPO_PKGMAP[git]=git
@@ -81,6 +83,7 @@ init_repo_package_map() {
             REPO_PKGMAP[cascadia-code]=ttf-cascadia-code
             REPO_PKGMAP[noto-sans-mono]=noto-fonts
             REPO_PKGMAP[virt-manager]="virt-manager virt-install virt-viewer qemu-desktop qemu-img libvirt dnsmasq edk2-ovmf"
+            REPO_PKGMAP[wlsunset]=wlsunset
             ;;
         *)
             return 1
@@ -108,6 +111,7 @@ init_repo_package_map() {
         "Cascadia Code (terminal / coding font)"
         "Noto Sans Mono (terminal fallback font)"
         "virt-manager (QEMU/KVM + libvirt)"
+        "wlsunset (blue light filter)"
     )
     if ((${#REPO_ORDER[@]} != ${#REPO_LABELS[@]})); then
         print_error "repo-packages: REPO_ORDER / REPO_LABELS length mismatch (internal bug)."
@@ -371,6 +375,14 @@ repo_packages_verify_selected() {
             print_success "Verify: virt-manager / virsh OK"
         else
             print_error "Verify: virt-manager or virsh missing."
+            bad=1
+        fi
+    fi
+    if [[ "${REPO_WANT[wlsunset]:-}" == "1" ]]; then
+        if command -v wlsunset &>/dev/null; then
+            print_success "Verify: wlsunset OK"
+        else
+            print_error "Verify: wlsunset missing."
             bad=1
         fi
     fi

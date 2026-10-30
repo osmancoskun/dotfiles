@@ -33,15 +33,49 @@ emit_json() {
     printf '{"text":"?","tooltip":"install python3 for waybar JSON","class":"off"}\n'
 }
 
-# systemctl disable removes this symlink when the unit file lives in the dotfiles repo.
-ensure_unit() {
-    if [[ -e "$UNIT_LINK" || -L "$UNIT_LINK" ]]; then
-        return 0
+# Waybar itself is a symlink into this repo. Resolve that, then point the
+# user unit and ~/.config/wlsunset at the same tree. A hardcoded ~/.dotfiles
+# path breaks when the clone lives somewhere else.
+repo_config_dir() {
+    (cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+}
+
+# Return 0 when the symlink is created or replaced.
+ensure_link() {
+    local src=$1 dst=$2
+    [[ -e "$src" ]] || return 1
+    if [[ -L "$dst" ]]; then
+        local src_real dst_real
+        src_real="$(readlink -f "$src")"
+        dst_real="$(readlink -f "$dst" 2>/dev/null || true)"
+        if [[ "$src_real" == "$dst_real" ]]; then
+            return 1
+        fi
+    elif [[ -e "$dst" ]]; then
+        return 1
     fi
-    mkdir -p "$(dirname "$UNIT_LINK")"
-    ln -s ../../../.dotfiles/home/.config/systemd/user/wlsunset.service "$UNIT_LINK"
-    systemctl --user daemon-reload
-    systemctl --user enable "$UNIT" >/dev/null
+    mkdir -p "$(dirname "$dst")"
+    ln -sfn "$src" "$dst"
+}
+
+# systemctl disable removes the unit symlink when the unit file lives in the repo.
+ensure_unit() {
+    local root src config_src config_dst relinked=0
+    root="$(repo_config_dir)"
+    src="$root/systemd/user/wlsunset.service"
+    config_src="$root/wlsunset"
+    config_dst="${XDG_CONFIG_HOME:-$HOME/.config}/wlsunset"
+    if ensure_link "$config_src" "$config_dst"; then
+        relinked=1
+    fi
+    if ensure_link "$src" "$UNIT_LINK"; then
+        relinked=1
+        systemctl --user daemon-reload
+        systemctl --user enable "$UNIT" >/dev/null
+    fi
+    if ((relinked)); then
+        systemctl --user restart "$UNIT" >/dev/null 2>&1 || true
+    fi
 }
 
 read_percent() {
